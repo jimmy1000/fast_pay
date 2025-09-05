@@ -1,0 +1,128 @@
+<form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Owner_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select name="row[owner_id]" class="form-control" required>
+                <option value="">请选择卡主</option>
+                {foreach name="cardOwnerList" item="owner"}
+                <option value="{$owner.owner_id}" {if $row.owner_id == $owner.owner_id}selected{/if}>{$owner.owner_id} - {$owner.name|default='未命名'}</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Card_number')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-card_number" data-rule="required" class="form-control" name="row[card_number]" type="text" value="{$row.card_number|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">银行类型:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select name="row[bank_type]" class="form-control" required>
+                <option value="">请选择银行类型</option>
+                {foreach name="bankTypeList" item="bank"}
+                <option value="{$bank.bank_short_name}" {if $row.bank_type == $bank.bank_short_name}selected{/if}>{$bank.bank_name} ({$bank.bank_short_name})</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">卡类型:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select name="row[card_type]" class="form-control" required>
+                <option value="">请选择卡类型</option>
+                <option value="1" {if $row.card_type == 1}selected{/if}>储蓄卡</option>
+                <option value="2" {if $row.card_type == 2}selected{/if}>信用卡</option>
+                <option value="3" {if $row.card_type == 3}selected{/if}>借记卡</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">卡状态:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select name="row[card_status]" class="form-control" required>
+                <option value="">请选择卡状态</option>
+                <option value="1" {if $row.card_status == 1}selected{/if}>正常</option>
+                <option value="2" {if $row.card_status == 2}selected{/if}>冻结</option>
+                <option value="3" {if $row.card_status == 3}selected{/if}>挂失</option>
+                <option value="4" {if $row.card_status == 4}selected{/if}>注销</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">银行卡二维码:</label>
+        <div class="col-xs-12 col-sm-8">
+            <div class="input-group">
+                <input id="c-qr_code" class="form-control" size="50" name="row[qr_code]" type="text" value="{$row.qr_code|htmlentities}">
+                <div class="input-group-addon no-border no-padding">
+                    <span><button type="button" id="plupload-qr_code" class="btn btn-danger plupload" data-input-id="c-qr_code" data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="false" data-preview-id="p-qr_code"><i class="fa fa-upload"></i> 上传</button></span>
+                    <span><button type="button" id="fachoose-qr_code" class="btn btn-primary fachoose" data-input-id="c-qr_code" data-mimetype="image/*" data-multiple="false"><i class="fa fa-list"></i> 选择</button></span>
+                </div>
+                <span class="msg-box n-right" for="c-qr_code"></span>
+            </div>
+            <ul class="row list-inline plupload-preview" id="p-qr_code"></ul>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Pay_amount')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-pay_amount" class="form-control" step="0.01" name="row[pay_amount]" type="number" value="{$row.pay_amount|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Repay_amount')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-repay_amount" class="form-control" step="0.01" name="row[repay_amount]" type="number" value="{$row.repay_amount|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Daily_limit')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-daily_limit" class="form-control" step="0.01" name="row[daily_limit]" type="number" value="{$row.daily_limit|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Monthly_limit')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-monthly_limit" class="form-control" step="0.01" name="row[monthly_limit]" type="number" value="{$row.monthly_limit|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Expiry_date')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-expiry_date" class="form-control datetimepicker" data-date-format="YYYY-MM-DD" data-use-current="true" name="row[expiry_date]" type="text" value="{$row.expiry_date}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Phone')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-phone" class="form-control" name="row[phone]" type="text" value="{$row.phone|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Remark')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea id="c-remark" class="form-control " rows="5" name="row[remark]" cols="50">{$row.remark|htmlentities}</textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Create_time')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-create_time" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[create_time]" type="text" value="{:$row.create_time?datetime($row.create_time):''}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Update_time')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-update_time" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[update_time]" type="text" value="{:$row.update_time?datetime($row.update_time):''}">
+        </div>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+        </div>
+    </div>
+</form>
