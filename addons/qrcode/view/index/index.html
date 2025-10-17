@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <title>二维码生成 - {$site.name}</title>
+    <link href="__CDN__/assets/libs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>二维码生成</h2>
+    <hr>
+    <div class="well">
+        <form action="" method="post">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="control-label">文本内容</label>
+                        <input type="text" name="text" class="form-control" placeholder="" value="https://www.example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">标签</label>
+                        <input type="text" name="label" placeholder="" class="form-control" value="示例文字">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Logo</label>
+                        <div class="form-inline">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="logo" id="logoyes" value="1">
+                                    显示(Logo地址在后台配置中修改)
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="logo" id="logono" value="0" checked>
+                                    不显示
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" class="btn btn-info"/>
+                        <input type="reset" class="btn btn-default btn-reset"/>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div id="toastTypeGroup">
+                        <label>标签水平位置</label>
+                        <div class="form-group radio">
+                            <label><input type="radio" name="labelalignment" value="left">左</label>
+                        </div>
+                        <div class="form-group radio">
+                            <label><input type="radio" name="labelalignment" checked value="center">中</label>
+                        </div>
+                        <div class="form-group radio">
+                            <label><input type="radio" name="labelalignment" value="right">右</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <div class="form-group">
+                            <label class="control-label">前景色</label>
+                            <input type="color" name="foreground" placeholder="" class="form-control" value="{$config.foreground|htmlentities}">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">背景色</label>
+                            <input type="color" name="background" placeholder="" class="form-control" value="{$config.background|htmlentities}">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">大小</label>
+                            <input type="number" name="size" placeholder="" class="form-control" value="{$config.size|intval}">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">内边距</label>
+                            <input type="number" name="padding" placeholder="" class="form-control" value="{$config.padding|intval}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">Logo大小</label>
+                        <input type="number" name="logosize" placeholder="" class="form-control" value="{$config.logosize|intval}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">标签大小</label>
+                        <input type="number" name="labelfontsize" placeholder="" class="form-control" value="{$config.labelfontsize|intval}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">标签颜色</label>
+                        <input type="color" name="labelfontcolor" placeholder="" class="form-control" value="{$config.labelfontcolor|htmlentities}">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">标签边距</label>
+                        <input type="text" name="labelmargin" placeholder="" class="form-control" value="{$config.labelmargin|htmlentities}">
+                    </div>
+                    <div class="form-group">
+                        <div id="positionGroup">
+                            <label>容错级别</label>
+                            <div class="form-inline">
+                                <div class="form-group radio">
+                                    <label>
+                                        <input type="radio" name="errorlevel" value="low" {if $config.errorlevel=='low'}checked{/if}> 低
+                                    </label>
+                                </div>
+                                <div class="form-group radio">
+                                    <label>
+                                        <input type="radio" name="errorlevel" value="medium" {if $config.errorlevel=='medium'}checked{/if}> 中等
+                                    </label>
+                                </div>
+                                <div class="form-group radio">
+                                    <label>
+                                        <input type="radio" name="errorlevel" value="quartile" {if $config.errorlevel=='quartile'}checked{/if}> 高
+                                    </label>
+                                </div>
+                                <div class="form-group radio">
+                                    <label>
+                                        <input type="radio" name="errorlevel" value="high" {if $config.errorlevel=='high'}checked{/if}> 超高
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <input type="text" class="form-control" id='qrcodeurl'/>
+    <img src="" alt="" id='qrcodeimg'/>
+
+    <div id="footer">
+        <p>Copyright &copy; {$site.name|htmlentities} {:date('Y')} <a href="https://beian.miit.gov.cn/" target="_blank">{$site.beian|htmlentities}</a></p>
+    </div>
+</div>
+<script src="__CDN__/assets/libs/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("form").submit(function () {
+            $("#qrcodeimg").prop("src", "{:addon_url('qrcode/index/build',[],false)}?" + $(this).serialize());
+            $("#qrcodeurl").val("{:addon_url('qrcode/index/build',[],false,true)}?" + $(this).serialize());
+            return false;
+        });
+        $("form").trigger('submit');
+        $(".btn-reset").on("click", function () {
+            setTimeout(function () {
+                $("form").trigger('submit');
+            }, 0);
+        });
+    });
+</script>
+</body>
+</html>
