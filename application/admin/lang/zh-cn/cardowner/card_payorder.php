@@ -1,0 +1,30 @@
+<?php
+
+return [
+    'Id'                 => '主键',
+    'Order_no'           => '系统订单号',
+    'Out_trade_no'       => '商户订单号',
+    'Card_owner_id'      => '卡主ID',
+    'Card_bank_id'       => '银行卡ID',
+    'Channel'            => '代收通道',
+    'Amount'             => '订单金额',
+    'Fee'                => '手续费',
+    'Real_amount'        => '实收金额',
+    'Status'             => '订单状态',
+    'Pay_method'         => '支付方式（如网银/快捷/扫码等）',
+    'Pay_time'           => '支付完成时间',
+    'Expired_time'       => '过期时间',
+    'Notify_url'         => '异步通知回调地址',
+    'Return_url'         => '前端跳转地址',
+    'Notify_status'      => '通知状态',
+    'Notify_times'       => '通知重试次数',
+    'Last_notify_time'   => '最后通知时间',
+    'Last_notify_result' => '最后一次通知结果摘要',
+    'Payer_name'         => '付款人姓名（可选）',
+    'Payer_account'      => '付款账号（可选,脱敏存储）',
+    'User_agent'         => 'UA',
+    'Remark'             => '备注',
+    'Createtime'         => '创建时间(Unix)',
+    'Updatetime'         => '更新时间(Unix)',
+    'Deletetime'         => '删除时间(Unix)'
+];

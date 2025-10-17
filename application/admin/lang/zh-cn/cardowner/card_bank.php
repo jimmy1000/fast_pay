@@ -15,6 +15,7 @@ return [
     'Card_type_0'    => '储蓄卡',
     'Card_type_1'    => '信用卡',
     'Card_type_2'    => '借记卡',
+    'Card_type_3'    => '移动支付',
     
     // 卡状态选项
     'Card_status_1'  => '正常',

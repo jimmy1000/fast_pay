@@ -9,7 +9,7 @@ return [
     'Bank_institution'     => '银行机构',
     'Bank_card_no'         => '银行卡号',
     'Daily_withdraw_ratio' => '当日提款比例(%)',
-    'Deposit_fee_rate'     => '卡主入款费率(%)',
+    'Deposit_fee_rate'     => '卡主入款费率',
     'Balance'              => '卡主余额',
     'Total_deposit'        => '已入款总额',
     'Total_withdraw'       => '已提款总额',
