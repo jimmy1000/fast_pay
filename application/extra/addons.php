@@ -21,6 +21,12 @@ return [
         'action_begin' => [
             'epay',
         ],
+        'response_send' => [
+            'loginbgindex',
+        ],
+        'index_login_init' => [
+            'loginbgindex',
+        ],
     ],
     'route' => [
         '/example$' => 'example/index/index',
