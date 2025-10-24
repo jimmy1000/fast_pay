@@ -2,7 +2,7 @@
 /thinkphp/
 /vendor/
 /runtime/*
-/public/assets/libs/
+# /public/assets/libs/ - 注释掉，允许 libs 目录被跟踪
 /public/uploads/*
 .DS_Store
 .idea
