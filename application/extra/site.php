@@ -4,7 +4,7 @@ return array (
   'name' => 'G3pay',
   'beian' => '',
   'cdnurl' => '',
-  'version' => '1.0.29',
+  'version' => '1.0.30',
   'timezone' => 'Asia/Kolkata',
   'forbiddenip' => '',
   'languages' => 
