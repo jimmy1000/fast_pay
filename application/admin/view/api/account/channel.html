@@ -1,0 +1,54 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    
+
+    <div class="form-group">
+        <table class="table-bordered table text-center" style="width:100%">
+            <tr>
+                <th>支持</th>
+                <th>接口名称</th>
+                <th>系统费率(例如：2.5%输入2.5)</th>
+                <th>上游费率(例如：2.5%输入2.5)</th>
+                <th>单笔最低金额</th>
+                <th>单笔最大金额</th>
+                <th>每日限额</th>
+                <th>是否跳转本站【网银收银台或扫码】</th>
+                <th>开关</th>
+            </tr>
+            {foreach $api_type_list as $api_type}
+            <tr>
+                <td><input type="checkbox" name="row[types][]" value="{$api_type.id}" {if condition="!empty($channel_list[$api_type['id']])"}checked{/if}></td>
+                <td>{$api_type.name}</td>
+                <td><input class="form-control" name="row[{$api_type.id}][rate]" value="{$channel_list[$api_type['id']]['rate']??0}"></td>
+                <td><input class="form-control" name="row[{$api_type.id}][upstream_rate]" value="{$channel_list[$api_type['id']]['upstream_rate']??0}"></td>
+                <td><input class="form-control" name="row[{$api_type.id}][minmoney]" value="{$channel_list[$api_type['id']]['minmoney']??0}"></td>
+                <td><input class="form-control" name="row[{$api_type.id}][maxmoney]" value="{$channel_list[$api_type['id']]['maxmoney']??0}"></td>
+                <td><input class="form-control" name="row[{$api_type.id}][daymoney]" value="{$channel_list[$api_type['id']]['daymoney']??0}"></td>
+                <td>
+                    <select name="row[{$api_type.id}][ifjump]" class="form-control">
+                        <option value="0" {if condition="!empty($channel_list[$api_type['id']])&&$channel_list[$api_type['id']]['ifjump'] == 0"}selected{/if}>否</option>
+                        <option value="1" {if condition="!empty($channel_list[$api_type['id']])&&$channel_list[$api_type['id']]['ifjump'] == 1"}selected{/if}>是</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="hidden" name="row[{$api_type.id}][status]" id="c-switch-{$api_type.id}" value="{$channel_list[$api_type['id']]['status']??1}"/>
+                    <a href="javascript:;" data-toggle="switcher" class="btn-switcher" data-input-id="c-switch-{$api_type.id}" data-yes="1" data-no="0" >
+                        <i class="fa fa-toggle-on text-success {if condition="!empty($channel_list[$api_type['id']])&&$channel_list[$api_type['id']]['status'] == 0"} fa-flip-horizontal text-gray{/if} fa-2x"></i>
+                    </a>
+                </td>
+            </tr>
+            {/foreach}
+        </table>
+    </div>
+
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed disabled">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+
+</form>
+
+

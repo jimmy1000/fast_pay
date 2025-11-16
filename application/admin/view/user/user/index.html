@@ -2,11 +2,45 @@
     {:build_heading()}
 
     <div class="panel-body">
+        <!-- 统计卡片 -->
+        <div class="row">
+            <div class="col-lg-6 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-aqua">
+                    <div class="inner">
+                        <h3 id="allMoney">₫0</h3>
+                        <p>待提款金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-money"></i>
+                    </div>
+                    <a href="javascript:;" class="small-box-footer">更多 <i class="fa fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-6 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-green">
+                    <div class="inner">
+                        <h3 id="allWithDrayMoney">₫0</h3>
+                        <p>已提款金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-check-circle"></i>
+                    </div>
+                    <a href="javascript:;" class="small-box-footer">更多 <i class="fa fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <!-- ./col -->
+        </div>
+        <!-- /.row -->
+        
         <div id="myTabContent" class="tab-content">
             <div class="tab-pane fade active in" id="one">
                 <div class="widget-body no-padding">
                     <div id="toolbar" class="toolbar">
                         {:build_toolbar('refresh,edit,del')}
+                        <a href="javascript:;" class="btn btn-success btn-openaccount {:$auth->check('user/user/add')?'':'hide'}" title="手动开户" data-url="user/user/add"><i class="fa fa-user-plus"></i> 手动开户</a>
                         <div class="dropdown btn-group {:$auth->check('user/user/multi')?'':'hide'}">
                             <a class="btn btn-primary btn-more dropdown-toggle btn-disabled disabled" data-toggle="dropdown"><i class="fa fa-cog"></i> {:__('More')}</a>
                             <ul class="dropdown-menu text-left" role="menu">

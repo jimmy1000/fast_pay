@@ -1,0 +1,182 @@
+<form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Name')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-name" class="form-control" name="row[name]" type="text" value="{$row.name|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group" id="upstream_container">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Api_upstream_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-api_upstream_id" data-rule="required" data-source="api/upstream/index" class="form-control selectpage" name="row[api_upstream_id]" type="text" value="{$row.api_upstream_id|htmlentities}">
+        </div>
+    </div>
+    
+    <div id="params">
+        {foreach $row.upstream.params as $param}
+        <div class="form-group">
+            <label class="control-label col-xs-12 col-sm-2">{$param.name}:</label>
+            <div class="col-xs-12 col-sm-8">
+                
+                <!-- 文本框 -->
+                {in name="param.type" value="text,number,email,url"}
+                <input type="{$param.type}" name="row[params][{$param.code}]" class="form-control" value="{$row.params[$param.code]|default=$param.default}">
+                {/in}
+                
+                <!-- 密码框 -->
+                {eq name="param.type" value="password"}
+                <input type="password" name="row[params][{$param.code}]" class="form-control" value="{$row.params[$param.code]|default=$param.default}">
+                {/eq}
+                
+                <!-- 多行文本 -->
+                {eq name="param.type" value="textarea"}
+                <textarea class="form-control" rows="10" name="row[params][{$param.code}]">{$row.params[$param.code]|default=$param.default}</textarea>
+                {/eq}
+                
+                <!-- 下拉选择 -->
+                {in name="param.type" value="select,selectpicker"}
+                {php}
+                    $option_list=explode(',',$param['default']);
+                    $current_value = isset($row['params'][$param['code']]) ? $row['params'][$param['code']] : (isset($option_list[0]) ? $option_list[0] : '');
+                    $select_class = $param['type'] == 'selectpicker' ? 'form-control selectpicker' : 'form-control';
+                {/php}
+                <select name="row[params][{$param.code}]" class="{$select_class}">
+                    {foreach $option_list as $option}
+                    <option value="{$option}" {if condition="$option == $current_value"}selected{/if}>{$option}</option>
+                    {/foreach}
+                </select>
+                {/in}
+                
+                <!-- 单选框 -->
+                {eq name="param.type" value="radio"}
+                {php}$option_list=explode(',',$param['default']);{/php}
+                <div class="radio">
+                    {foreach $option_list as $key=>$option}
+                    <label>
+                        <input type="radio" name="row[params][{$param.code}]" value="{$option}" {if condition="isset($row['params'][$param['code']]) ? $option == $row['params'][$param['code']] : $key == 0"}checked{/if}> {$option}
+                    </label>
+                    {/foreach}
+                </div>
+                {/eq}
+                
+                <!-- 复选框 -->
+                {eq name="param.type" value="checkbox"}
+                {php}
+                    $option_list=explode(',',$param['default']);
+                    $checked_values = isset($row['params'][$param['code']]) ? explode(',', $row['params'][$param['code']]) : [];
+                {/php}
+                <div class="checkbox">
+                    {foreach $option_list as $option}
+                    <label>
+                        <input type="checkbox" name="row[params][{$param.code}][]" value="{$option}" {if condition="in_array($option, $checked_values)"}checked{/if}> {$option}
+                    </label>
+                    {/foreach}
+                </div>
+                {/eq}
+                
+                <!-- 日期时间 -->
+                {in name="param.type" value="date,time,datetime"}
+                <input type="text" name="row[params][{$param.code}]" class="form-control datetimepicker" data-date-format="{eq name='param.type' value='date'}YYYY-MM-DD{/eq}{eq name='param.type' value='time'}HH:mm:ss{/eq}{eq name='param.type' value='datetime'}YYYY-MM-DD HH:mm:ss{/eq}" value="{$row.params[$param.code]|default=$param.default}">
+                {/in}
+                
+            </div>
+        </div>
+        {/foreach}
+    </div>
+
+    <script type="text/html" id="params-tpl">
+        <% for(var i = 0; i < params.length; i++){ %>
+        <div class="form-group">
+            <label class="control-label col-xs-12 col-sm-2"><%= params[i].name%>:</label>
+            <div class="col-xs-12 col-sm-8">
+                
+                <!--文本框类-->
+                <% if(['text','number','email','url'].indexOf(params[i].type) >= 0){ %>
+                <input type="<%= params[i].type %>" name="row[params][<%= params[i].code %>]" class="form-control" value="<%= params[i].default %>">
+                <%}%>
+                
+                <!--密码框-->
+                <% if(params[i].type == 'password') { %>
+                <input type="password" name="row[params][<%= params[i].code %>]" class="form-control" value="<%= params[i].default %>">
+                <%}%>
+                
+                <!--多行文本-->
+                <%if(params[i].type == 'textarea'){%>
+                <textarea class="form-control" rows="10" name="row[params][<%= params[i].code %>]"><%= params[i].default%></textarea>
+                <%}%>
+                
+                <!--下拉选择-->
+                <%if(params[i].type == 'select' || params[i].type == 'selectpicker'){%>
+                <select name="row[params][<%= params[i].code %>]" class="form-control <%= params[i].type == 'selectpicker' ? 'selectpicker' : '' %>">
+                    <% for(var j = 0; j < params[i].default.length; j++){ %>
+                        <option value="<%= params[i].default[j] %>"><%= params[i].default[j] %></option>
+                    <% } %>
+                </select>
+                <%}%>
+                
+                <!--单选框-->
+                <%if(params[i].type == 'radio'){%>
+                <div class="radio">
+                    <% for(var j = 0; j < params[i].default.length; j++){ %>
+                    <label>
+                        <input type="radio" name="row[params][<%= params[i].code %>]" value="<%= params[i].default[j] %>" <%= j == 0 ? 'checked' : '' %>> <%= params[i].default[j] %>
+                    </label>
+                    <% } %>
+                </div>
+                <%}%>
+                
+                <!--复选框-->
+                <%if(params[i].type == 'checkbox'){%>
+                <div class="checkbox">
+                    <% for(var j = 0; j < params[i].default.length; j++){ %>
+                    <label>
+                        <input type="checkbox" name="row[params][<%= params[i].code %>][]" value="<%= params[i].default[j] %>"> <%= params[i].default[j] %>
+                    </label>
+                    <% } %>
+                </div>
+                <%}%>
+                
+                <!--日期时间-->
+                <%if(['date','time','datetime'].indexOf(params[i].type) >= 0){%>
+                <input type="text" name="row[params][<%= params[i].code %>]" class="form-control datetimepicker" data-date-format="<%= params[i].type == 'date' ? 'YYYY-MM-DD' : (params[i].type == 'time' ? 'HH:mm:ss' : 'YYYY-MM-DD HH:mm:ss') %>" value="<%= params[i].default %>">
+                <%}%>
+                
+            </div>
+        </div>
+        <% } %>
+    </script>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Ifrepay')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select  id="c-ifrepay" data-rule="required" class="form-control selectpicker" name="row[ifrepay]">
+                {foreach name="ifrepayList" item="vo"}
+                    <option value="{$key}" {in name="key" value="$row.ifrepay"}selected{/in}>{$vo}</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Ifrecharge')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select  id="c-ifrecharge" data-rule="required" class="form-control selectpicker" name="row[ifrecharge]">
+                {foreach name="ifrechargeList" item="vo"}
+                    <option value="{$key}" {in name="key" value="$row.ifrecharge"}selected{/in}>{$vo}</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Domain')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-domain" data-rule="required" class="form-control" name="row[domain]" type="text" value="{$row.domain|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+        </div>
+    </div>
+</form>

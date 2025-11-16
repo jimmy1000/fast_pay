@@ -1,150 +1,209 @@
 <form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
     {:token()}
     <input type="hidden" name="row[id]" value="{$row.id|htmlentities}">
+
     <div class="form-group">
-        <label class="control-label col-xs-12 col-sm-2">{:__('Group')}:</label>
-        <div class="col-xs-12 col-sm-4">
+        <label for="c-username" class="control-label col-xs-12 col-sm-2">商户号:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input data-rule="required" class="form-control" type="text" value="{$row.merchant_id}" readonly>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-group_id" class="control-label col-xs-12 col-sm-2">{:__('Group')}:</label>
+        <div class="col-xs-12 col-sm-10">
             {$groupList}
         </div>
     </div>
+
     <div class="form-group">
         <label for="c-username" class="control-label col-xs-12 col-sm-2">{:__('Username')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-username" data-rule="required" class="form-control" name="row[username]" type="text" value="{$row.username|htmlentities}">
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-username" data-rule="required" class="form-control" name="row[username]" type="text" value="{$row.username}">
         </div>
     </div>
+
     <div class="form-group">
         <label for="c-nickname" class="control-label col-xs-12 col-sm-2">{:__('Nickname')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-nickname" data-rule="required" class="form-control" name="row[nickname]" type="text" value="{$row.nickname|htmlentities}">
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-nickname" data-rule="required" class="form-control" name="row[nickname]" type="text" value="{$row.nickname}">
         </div>
     </div>
+
     <div class="form-group">
         <label for="c-password" class="control-label col-xs-12 col-sm-2">{:__('Password')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-password" data-rule="password" class="form-control" name="row[password]" type="password" value="" placeholder="{:__('Leave password blank if dont want to change')}" autocomplete="new-password" />
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-password" data-rule="password" class="form-control" name="row[password]" type="text" value="" placeholder="{:__('Leave password blank if dont want to change')}" autocomplete="new-password" />
         </div>
     </div>
+
     <div class="form-group">
-        <label for="c-email" class="control-label col-xs-12 col-sm-2">{:__('Email')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-email" data-rule="email" class="form-control" name="row[email]" type="text" value="{$row.email|htmlentities}">
+        <label for="c-paypassword" class="control-label col-xs-12 col-sm-2">提现密码:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-paypassword" data-rule="password" class="form-control" name="row[paypassword]" type="text" value="" placeholder="{:__('Leave password blank if dont want to change')}" autocomplete="new-paypassword" />
         </div>
     </div>
+
     <div class="form-group">
-        <label for="c-mobile" class="control-label col-xs-12 col-sm-2">{:__('Mobile')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-mobile" data-rule="mobile" class="form-control" name="row[mobile]" type="text" value="{$row.mobile|htmlentities}">
+        <label for="c-contacts" class="control-label col-xs-12 col-sm-2">{:__('Contacts')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-contacts" data-rule="" class="form-control" name="row[contacts]" type="text" value="{$row.contacts}">
         </div>
     </div>
+
     <div class="form-group">
-        <label for="c-avatar" class="control-label col-xs-12 col-sm-2">{:__('Avatar')}:</label>
-        <div class="col-xs-12 col-sm-8">
-            <div class="input-group">
-                <input id="c-avatar" data-rule="" class="form-control" size="50" name="row[avatar]" type="text" value="{$row.avatar|htmlentities}">
-                <div class="input-group-addon no-border no-padding">
-                    <span><button type="button" id="faupload-avatar" class="btn btn-danger faupload" data-input-id="c-avatar" data-mimetype="image/gif,image/jpeg,image/png,image/jpg,image/bmp" data-multiple="false" data-preview-id="p-avatar"><i class="fa fa-upload"></i> {:__('Upload')}</button></span>
-                    <span><button type="button" id="fachoose-avatar" class="btn btn-primary fachoose" data-input-id="c-avatar" data-mimetype="image/*" data-multiple="false"><i class="fa fa-list"></i> {:__('Choose')}</button></span>
-                </div>
-                <span class="msg-box n-right" for="c-avatar"></span>
+        <label class="control-label col-xs-12 col-sm-2">上级代理编号:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-agent_id" data-source="user/user/index" data-field="merchant_id" data-primary-key="merchant_id" data-searchField="merchant_id" data-autoFillResult="true" class="form-control selectpage" name="row[agent_id]" type="text" value="{$row.agent_id}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">结算类型:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[balancestyle]" class="form-control selectpicker">
+                <option value="-1" {eq name="row['balancestyle']" value="-1"}selected{/eq}>按照系统默认配置</option>
+                <option value="D" {eq name="row['balancestyle']" value="D"}selected{/eq}>自然日</option>
+                <option value="T" {eq name="row['balancestyle']" value="T"}selected{/eq}>工作日</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">结算周期:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[balancetime]" value="{$row['balancetime']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                例如T+0这里填0，D+0这里填0，T+1这里填1，与结算类型配合使用，-1代表使用系统默认设置
             </div>
-            <ul class="row list-inline faupload-preview" id="p-avatar"></ul>
         </div>
     </div>
+
     <div class="form-group">
-        <label for="c-level" class="control-label col-xs-12 col-sm-2">{:__('Level')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-level" data-rule="required" class="form-control" name="row[level]" type="number" value="{$row.level|htmlentities}">
+        <label class="control-label col-xs-12 col-sm-2">当日提现比例:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[paylv]" value="{$row['paylv']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                默认-1 按照系统参数配置，如果需要冻结当天20%结算费用，则输入80
+            </div>
         </div>
     </div>
+
     <div class="form-group">
-        <label class="control-label col-xs-12 col-sm-2">{:__('Gender')}:</label>
+        <label class="control-label col-xs-12 col-sm-2">单笔提现费用:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[payrate_each]" value="{$row['payrate_each']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                单笔6元则输入6,为0则不扣费,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">百分比提现费率:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[payrate_percent]" value="{$row['payrate_percent']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                按照百分比1.5%输入1.5 为0则不扣费,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">代理分润比例:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[agent_ratio]" value="{$row['agent_ratio']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                按照百分比20%输入0.2,为0则使用费率差,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">代付风控金额:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[risk_control]" value="{$row['risk_control']}" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                大于等于设定值触发代付风控,为0则不触发,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">代理收益:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[ifagentmoney]" class="form-control selectpicker">
+                <option value="-1" {eq name="row['ifagentmoney']" value="-1"}selected{/eq}>按照系统默认配置</option>
+                <option value="0" {eq name="row['ifagentmoney']" value="0"}selected{/eq}>关闭代理收益</option>
+                <option value="1" {eq name="row['ifagentmoney']" value="1"}selected{/eq}>开启代理收益</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">公钥设置:</label>
+        <div class="col-xs-12 col-sm-10">
+            <textarea class="form-control" name="row[public_key]" rows="6">{$row['public_key']}</textarea>
+            <div class="text-danger">修改此项会影响线上交易，慎重！！</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">请求IP:</label>
+        <div class="col-xs-12 col-sm-10">
+            <textarea class="form-control" name="row[req_url]" rows="6">{$row['req_url']}</textarea>
+            <div class="text-danger">修改此项会影响线上交易，慎重！！多个值以英文,隔开</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">自动代付开关:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[ifdaifuauto]" class="form-control selectpicker">
+                <option value="0" {eq name="row['ifdaifuauto']" value="0"}selected{/eq}>关闭</option>
+                <option value="1" {eq name="row['ifdaifuauto']" value="1"}selected{/eq}>开启</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">默认代付账户:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-daifuid" data-source="api/account/repay" data-field="name" data-primary-key="id" class="form-control selectpage" name="row[daifuid]" type="text" value="{$row['daifuid']}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">批量代付开关:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[batchrepay]" class="form-control selectpicker">
+                <option value="0" {eq name="row['batchrepay']" value="0"}selected{/eq}>关闭</option>
+                <option value="1" {eq name="row['batchrepay']" value="1"}selected{/eq}>开启</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">开启API代付:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[ifapirepay]" class="form-control selectpicker">
+                <option value="0" {eq name="row['ifapirepay']" value="0"}selected{/eq}>关闭</option>
+                <option value="1" {eq name="row['ifapirepay']" value="1"}selected{/eq}>开启</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="content" class="control-label col-xs-12 col-sm-2">{:__('Status')}:</label>
         <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[gender]', ['1'=>__('Male'), '0'=>__('Female')], $row['gender'])}
+            {:build_radios('row[status]', ['normal'=>__('Normal'), 'hidden'=>__('锁定')], $row['status'])}
         </div>
     </div>
-    <div class="form-group">
-        <label for="c-birthday" class="control-label col-xs-12 col-sm-2">{:__('Birthday')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-birthday" data-rule="" class="form-control datetimepicker" data-date-format="YYYY-MM-DD" data-use-current="true" name="row[birthday]" type="text" value="{$row.birthday|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-bio" class="control-label col-xs-12 col-sm-2">{:__('Bio')}:</label>
-        <div class="col-xs-12 col-sm-8">
-            <input id="c-bio" data-rule="" class="form-control" name="row[bio]" type="text" value="{$row.bio|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-money" class="control-label col-xs-12 col-sm-2">{:__('Money')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-money" data-rule="required" class="form-control" name="row[money]" type="number" value="{$row.money|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-score" class="control-label col-xs-12 col-sm-2">{:__('Score')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-score" data-rule="required" class="form-control" name="row[score]" type="number" value="{$row.score|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-successions" class="control-label col-xs-12 col-sm-2">{:__('Successions')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-successions" data-rule="required" class="form-control" name="row[successions]" type="number" value="{$row.successions|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-maxsuccessions" class="control-label col-xs-12 col-sm-2">{:__('Maxsuccessions')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-maxsuccessions" data-rule="required" class="form-control" name="row[maxsuccessions]" type="number" value="{$row.maxsuccessions|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-prevtime" class="control-label col-xs-12 col-sm-2">{:__('Prevtime')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-prevtime" data-rule="required" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[prevtime]" type="text" value="{$row.prevtime|datetime}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-logintime" class="control-label col-xs-12 col-sm-2">{:__('Logintime')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-logintime" data-rule="required" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[logintime]" type="text" value="{$row.logintime|datetime}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-loginip" class="control-label col-xs-12 col-sm-2">{:__('Loginip')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-loginip" data-rule="required" class="form-control" name="row[loginip]" type="text" value="{$row.loginip|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-loginfailure" class="control-label col-xs-12 col-sm-2">{:__('Loginfailure')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-loginfailure" data-rule="required" class="form-control" name="row[loginfailure]" type="number" value="{$row.loginfailure|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-joinip" class="control-label col-xs-12 col-sm-2">{:__('Joinip')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-joinip" data-rule="required" class="form-control" name="row[joinip]" type="text" value="{$row.joinip|htmlentities}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="c-jointime" class="control-label col-xs-12 col-sm-2">{:__('Jointime')}:</label>
-        <div class="col-xs-12 col-sm-4">
-            <input id="c-jointime" data-rule="required" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[jointime]" type="text" value="{$row.jointime|datetime}">
-        </div>
-    </div>
-    <div class="form-group">
-        <label class="control-label col-xs-12 col-sm-2">{:__('Status')}:</label>
-        <div class="col-xs-12 col-sm-8">
-            {:build_radios('row[status]', ['normal'=>__('Normal'), 'hidden'=>__('Hidden')], $row['status'])}
-        </div>
-    </div>
+
     <div class="form-group layer-footer">
         <label class="control-label col-xs-12 col-sm-2"></label>
         <div class="col-xs-12 col-sm-8">
-            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+            <button type="submit" class="btn btn-success btn-embossed disabled">确定修改【{$row.merchant_id}】</button>
             <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
         </div>
     </div>

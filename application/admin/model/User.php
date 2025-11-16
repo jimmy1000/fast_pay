@@ -5,6 +5,10 @@ namespace app\admin\model;
 use app\common\model\MoneyLog;
 use app\common\model\ScoreLog;
 use think\Model;
+use fast\Random;
+use app\admin\model\user\Auth as UserAuth;
+use app\admin\model\user\Log as UserLog;
+use app\admin\model\mq\Order;
 
 class User extends Model
 {
@@ -30,30 +34,63 @@ class User extends Model
 
     protected static function init()
     {
-        self::beforeUpdate(function ($row) {
+        $auth = \app\common\library\Auth::instance();
+        
+        // 更新前处理：密码加密、金额变更日志
+        self::beforeUpdate(function ($row) use ($auth) {
             $changed = $row->getChangedData();
-            //如果有修改密码
-            if (isset($changed['password'])) {
-                if ($changed['password']) {
-                    $salt = \fast\Random::alnum();
-                    $row->password = \app\common\library\Auth::instance()->getEncryptPassword($changed['password'], $salt);
-                    $row->salt = $salt;
-                } else {
-                    unset($row->password);
-                }
+            
+            // 处理登录密码
+            if (isset($changed['password']) && $changed['password']) {
+                $salt = Random::alnum();
+                $row->password = $auth->getEncryptPassword($changed['password'], $salt);
+                $row->salt = $salt;
+            } elseif (isset($changed['password'])) {
+                unset($row->password);
+            }
+            
+            // 处理支付密码
+            if (isset($changed['paypassword']) && $changed['paypassword']) {
+                $salt = Random::alnum();
+                $row->paypassword = $auth->getEncryptPassword($changed['paypassword'], $salt);
+                $row->paysalt = $salt;
+            } elseif (isset($changed['paypassword'])) {
+                unset($row->paypassword);
+            }
+            
+            // 记录金额变更日志
+            if (isset($changed['money'])) {
+                $origin = $row->getOriginData();
+                MoneyLog::create([
+                    'user_id' => $row['id'],
+                    'money' => $changed['money'] - $origin['money'],
+                    'before' => $origin['money'],
+                    'after' => $changed['money'],
+                    'memo' => '管理员变更金额'
+                ]);
             }
         });
 
+        // 插入前：生成md5key、设置默认值
+        self::beforeInsert(function ($row) {
+            $row->md5key = Random::alpha(32);
+            $row->jointime = $row->jointime ?? time();
+            $row->joinip = $row->joinip ?? '0.0.0.0';
+        });
 
-        self::beforeUpdate(function ($row) {
-            $changedata = $row->getChangedData();
-            $origin = $row->getOriginData();
-            if (isset($changedata['money']) && (function_exists('bccomp') ? bccomp($changedata['money'], $origin['money'], 2) !== 0 : (double)$changedata['money'] !== (double)$origin['money'])) {
-                MoneyLog::create(['user_id' => $row['id'], 'money' => $changedata['money'] - $origin['money'], 'before' => $origin['money'], 'after' => $changedata['money'], 'memo' => '管理员变更金额']);
-            }
-            if (isset($changedata['score']) && (int)$changedata['score'] !== (int)$origin['score']) {
-                ScoreLog::create(['user_id' => $row['id'], 'score' => $changedata['score'] - $origin['score'], 'before' => $origin['score'], 'after' => $changedata['score'], 'memo' => '管理员变更积分']);
-            }
+        // 插入后：生成商户号
+        self::afterInsert(function ($row) {
+            $row->merchant_id = date("Ym") . $row->id;
+            $row->save();
+        });
+
+        // 删除后：清理关联数据
+        self::afterDelete(function ($row) {
+            $merchantId = $row->getData('merchant_id');
+            UserAuth::destroy(['user_id' => $row->id]);
+            UserLog::destroy(['merchantid' => $merchantId]);
+            Order::destroy(['merchant_id' => $merchantId]);
+            MoneyLog::destroy(['user_id' => $row->id]);
         });
     }
 

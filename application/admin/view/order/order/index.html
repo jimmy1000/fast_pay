@@ -1,0 +1,110 @@
+<div class="panel panel-default panel-intro">
+    
+    <div class="panel-heading">
+        {:build_heading(null,FALSE)}
+        <ul class="nav nav-tabs" data-field="status">
+            <li class="{:$Think.get.status === null ? 'active' : ''}"><a href="#t-all" data-value="" data-toggle="tab">{:__('All')}</a></li>
+            {foreach name="statusList" item="vo"}
+            <li class="{:$Think.get.status === (string)$key ? 'active' : ''}"><a href="#t-{$key}" data-value="{$key}" data-toggle="tab">{$vo}</a></li>
+            {/foreach}
+        </ul>
+    </div>
+
+
+    <div class="panel-body">
+        <!-- 订单趋势图表 -->
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-lg-12">
+                <div class="box box-solid">
+                    <div class="box-body">
+                        <div id="echart" style="height:400px;width:100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-aqua">
+                    <div class="inner">
+                        <h3 id="todayMoney">₫0</h3>
+                        <p>当日金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-money"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">当日成功订单总额</span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-light-blue">
+                    <div class="inner">
+                        <h3 id="todayExpenseMoney">₫0</h3>
+                        <p>当日支出</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-arrow-down"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">商户支出,代理支出,上游支出</span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-purple">
+                    <div class="inner">
+                        <h3 id="allMoney">₫0</h3>
+                        <p>平台总金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-bar-chart"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">总金额</span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-teal">
+                    <div class="inner">
+                        <h3 id="allExpenseMoney">₫0</h3>
+                        <p>平台总支出</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-line-chart"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">商户支出,代理支出,上游支出</span>
+                </div>
+            </div>
+            <!-- ./col -->
+        </div>
+        <!-- /.row -->
+        
+        <div id="myTabContent" class="tab-content">
+            <div class="tab-pane fade active in" id="one">
+                <div class="widget-body no-padding">
+                    <div id="toolbar" class="toolbar">
+                        <a href="javascript:;" class="btn btn-primary btn-refresh" title="{:__('Refresh')}" ><i class="fa fa-refresh"></i> </a>
+
+                        <!-- 统计信息按钮 -->
+                        <a href="javascript:;" class="btn btn-default" style="font-size:14px;color:dodgerblue;">
+                            <span class="extend">
+                                当前列表金额：<span id="listMoney">₫0</span>
+                                用户实际获得金额：<span id="listHaveMoney">₫0</span>
+                            </span>
+                        </a>
+                        
+                    </div>
+                    <table id="table" class="table table-striped table-bordered table-hover table-nowrap"
+                           width="100%">
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

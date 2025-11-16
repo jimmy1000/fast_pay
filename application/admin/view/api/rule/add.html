@@ -1,0 +1,54 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Name')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-name" data-rule="required" class="form-control" name="row[name]" type="text" value="">
+        </div>
+    </div>
+    <div class="form-group" id="api_type_container">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Api_type_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-api_type_id" data-rule="required" data-source="api/type/index" class="form-control selectpage" name="row[api_type_id]" type="text" value="">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Type')}:</label>
+        <div class="col-xs-12 col-sm-8">
+                        
+            <select  id="c-type" data-rule="required" class="form-control selectpicker" name="row[type]">
+                {foreach name="typeList" item="vo"}
+                    <option value="{$key}" {in name="key" value="0"}selected{/in}>{$vo}</option>
+                {/foreach}
+            </select>
+
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-xs-12 col-sm-12" id="account_ids"></div>
+        <script type="text/html" id="params-tpl">
+        <table class="table table-bordered">
+            <tr>
+                <th>是否选择</th>
+                <th>接口账户名</th>
+                <th>权重【随机轮询有效】</th>
+                <th>操作</th>
+            </tr>
+            <% for(var i in params){ %>
+            <tr>
+                <td><input type="checkbox" name="row[api_account_ids][id][]" value="<%= params[i].account.id%>" /> </td>
+                <td><%= params[i].account.name%></td>
+                <td><input name="row[api_account_ids][weight][]" type="text" class="form-control" value="1"></td>
+                <td><button type="button" class="btn btn-danger btn-dragsort">拖拽排序</button></td>
+            </tr>
+            <%}%>
+        </table>
+        </script>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,27 @@
+<form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Merchant_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-merchant_id" data-rule="required" data-source="merchant/index" class="form-control selectpage" name="row[merchant_id]" type="text" value="{$row.merchant_id|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Group_chat_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-group_chat_id" data-rule="required" data-source="group/chat/index" class="form-control selectpage" name="row[group_chat_id]" type="text" value="{$row.group_chat_id|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Group_title')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-group_title" class="form-control" name="row[group_title]" type="text" value="{$row.group_title|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+        </div>
+    </div>
+</form>

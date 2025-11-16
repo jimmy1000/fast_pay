@@ -14,7 +14,7 @@ class User extends Backend
 {
 
     protected $relationSearch = true;
-    protected $searchFields = 'id,username,nickname';
+    protected $searchFields = 'id,username,nickname,merchant_id';
 
     /**
      * @var \app\admin\model\User
@@ -49,7 +49,16 @@ class User extends Backend
                 $v->avatar = $v->avatar ? cdnurl($v->avatar, true) : letter_avatar($v->nickname);
                 $v->hidden(['password', 'salt']);
             }
+            
+            // 统计数据（不受搜索条件影响，统计所有数据）
+            $allMoney = $this->model->sum('money') ?: 0;
+            $allWithDrayMoney = $this->model->sum('withdrawal') ?: 0;
+            
             $result = array("total" => $list->total(), "rows" => $list->items());
+            $result['extend'] = [
+                'allMoney' => $allMoney,
+                'allWithDrayMoney' => $allWithDrayMoney
+            ];
 
             return json($result);
         }
@@ -61,9 +70,7 @@ class User extends Backend
      */
     public function add()
     {
-        if ($this->request->isPost()) {
-            $this->token();
-        }
+        $this->view->assign('groupList', build_select('row[group_id]', \app\admin\model\UserGroup::column('id,name'), 1, ['class' => 'form-control selectpicker']));
         return parent::add();
     }
 
@@ -72,9 +79,6 @@ class User extends Backend
      */
     public function edit($ids = null)
     {
-        if ($this->request->isPost()) {
-            $this->token();
-        }
         $row = $this->model->get($ids);
         $this->modelValidate = true;
         if (!$row) {

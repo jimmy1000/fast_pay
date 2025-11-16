@@ -1,0 +1,157 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label for="c-group_id" class="control-label col-xs-12 col-sm-2">{:__('Group')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            {$groupList}
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label for="c-username" class="control-label col-xs-12 col-sm-2">{:__('Username')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-username" data-rule="required" class="form-control" name="row[username]" type="text" value="" placeholder="登录账号">
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label for="c-nickname" class="control-label col-xs-12 col-sm-2">{:__('Nickname')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-nickname" data-rule="required" class="form-control" name="row[nickname]" type="text" value="" placeholder="昵称">
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label for="c-password" class="control-label col-xs-12 col-sm-2">{:__('Password')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-password" data-rule="password" class="form-control" name="row[password]" type="text" value="" placeholder="商户的登录密码" autocomplete="new-password" />
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label for="c-mobile" class="control-label col-xs-12 col-sm-2">{:__('Contacts')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-mobile" data-rule="required" class="form-control" name="row[contacts]" type="text" value="" placeholder="商户telegram号">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">上级代理编号:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input id="c-agent_id"  data-source="user/user/index" data-field="merchant_id" data-primary-key="merchant_id" data-searchField="merchant_id" data-autoFillResult="true" class="form-control selectpage" name="row[agent_id]" type="text" value="">
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">结算类型:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[balancestyle]" class="form-control selectpicker">
+                <option value="-1" selected>按照系统默认配置</option>
+                <option value="D">自然日</option>
+                <option value="T">工作日</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">结算周期:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[balancetime]" value="-1" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                例如T+0这里填0，D+0这里填0，T+1这里填1，与结算类型配合使用，-1代表使用系统默认设置
+            </div>
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">当日提现比例:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[paylv]" value="-1" class="form-control" data-rule="required" />
+            <div class="alert alert-info" style="margin-top: 5px">
+                默认-1 按照系统参数配置，如果需要冻结当天20%结算费用，则输入80
+            </div>
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">单笔提现费用:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[payrate_each]" value="-1" class="form-control" data-rule="required" />
+
+            <div class="alert alert-info" style="margin-top: 5px">
+                单笔6元则输入6,为0则不扣费,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">百分比提现费率:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[payrate_percent]" value="-1" class="form-control" data-rule="required" />
+
+            <div class="alert alert-info" style="margin-top: 5px">
+                按照百分比1.5%输入1.5 为0则不扣费,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">代理分润比例:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[agent_ratio]" value="-1" class="form-control" data-rule="required" />
+
+            <div class="alert alert-info" style="margin-top: 5px">
+                按照百分比20%输入0.2,为0则使用费率差,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">代付风控金额:</label>
+        <div class="col-xs-12 col-sm-10">
+            <input type="text" name="row[risk_control]" value="-1" class="form-control" data-rule="required" />
+
+            <div class="alert alert-info" style="margin-top: 5px">
+                大于等于设定值触发代付风控,为0则不触发,小于0则使用系统参数配置
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">是否关闭代理收益:</label>
+        <div class="col-xs-12 col-sm-10">
+            <select name="row[ifagentmoney]" class="form-control selectpicker">
+                <option value="-1" selected>按照系统默认配置</option>
+                <option value="0">关闭代理收益</option>
+                <option value="1">开启代理收益</option>
+            </select>
+        </div>
+    </div>
+
+
+
+
+    <div class="form-group">
+        <label for="content" class="control-label col-xs-12 col-sm-2">{:__('Status')}:</label>
+        <div class="col-xs-12 col-sm-10">
+            {:build_radios('row[status]', ['normal'=>__('Normal'), 'hidden'=>__('锁定')])}
+        </div>
+    </div>
+
+
+
+
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed disabled">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>
