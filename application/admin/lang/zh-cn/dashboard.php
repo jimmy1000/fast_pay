@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'Custom'                   => '自定义',
+    'Custom'                   => '代收统计图',
+    'Repay statistics'         => '代付统计图',
     'Pid'                      => '父ID',
     'Type'                     => '栏目类型',
     'Image'                    => '图片',
@@ -12,7 +13,7 @@ return [
     'Total cardholder'          => '总卡主数',
     'Total attachment'         => '总附件数',
     'Total admin'              => '总管理员数',
-    'Total user money'         => '会员余额总数',
+    'Total user money'         => '会员余额',
     'Total withdrawal'         => '会员结算总额',
     'Total max money'          => '银行卡当天限额',
     'Total today money'        => '当天已收额度',

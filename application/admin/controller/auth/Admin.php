@@ -187,12 +187,10 @@ class Admin extends Backend
                     } else {
                         unset($params['password'], $params['salt']);
                     }
-                    //这里需要针对username和email做唯一验证
+                    //这里需要针对username做唯一验证
                     $adminValidate = \think\Loader::validate('Admin');
                     $adminValidate->rule([
                         'username' => 'require|regex:\w{3,30}|unique:admin,username,' . $row->id,
-                        'email'    => 'require|email|unique:admin,email,' . $row->id,
-                        'mobile'   => 'regex:1[3-9]\d{9}|unique:admin,mobile,' . $row->id,
                         'password' => 'regex:\S{32}',
                     ]);
                     $result = $row->validate('Admin.edit')->save($params);

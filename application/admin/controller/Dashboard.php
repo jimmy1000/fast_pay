@@ -6,6 +6,8 @@ use app\admin\model\Admin;
 use app\admin\model\User;
 use app\admin\model\mq\Category;
 use app\admin\model\mq\Account;
+use app\admin\model\order\Order as OrderModel;
+use app\admin\model\repay\Order as RepayOrderModel;
 use app\common\controller\Backend;
 use app\common\model\Attachment;
 use fast\Date;
@@ -83,6 +85,152 @@ class Dashboard extends Backend
 
         $this->assignconfig('column', array_keys($userlist));
         $this->assignconfig('userdata', array_values($userlist));
+
+        // 订单统计数据
+        $orderModel = new OrderModel();
+        
+        // 今日订单统计
+        $todayOrderTotal = $orderModel->whereTime('createtime', 'today')->count();
+        $todayOrderSuccess = $orderModel->whereTime('createtime', 'today')->where('status', 'in', '1,2')->count();
+        
+        // 今日金额统计
+        $todayMoney = $orderModel->whereTime('createtime', 'today')->where('status', 'in', '1,2')->sum('total_money') ?: 0;
+        $todayExpense = $orderModel->whereTime('createtime', 'today')->where('status', 'in', '1,2')
+            ->field('COALESCE(sum(have_money),0) + COALESCE(sum(agent_money),0) + COALESCE(sum(upstream_money),0) as expense')
+            ->find();
+        $todayExpenseMoney = $todayExpense ? $todayExpense->expense : 0;
+        
+        // 全部订单统计
+        $allOrderTotal = $orderModel->count();
+        $allOrderSuccess = $orderModel->where('status', 'in', '1,2')->count();
+        
+        // 全部金额统计
+        $allMoney = $orderModel->where('status', 'in', '1,2')->sum('total_money') ?: 0;
+        $allExpense = $orderModel->where('status', 'in', '1,2')
+            ->field('COALESCE(sum(have_money),0) + COALESCE(sum(agent_money),0) + COALESCE(sum(upstream_money),0) as expense')
+            ->find();
+        $allExpenseMoney = $allExpense ? $allExpense->expense : 0;
+        
+        // 图表数据（最近7天）
+        $chartColumn = [];
+        $chartMoneyList = [];
+        $chartOrderList = [];
+        $chartRateList = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-{$i} days"));
+            $chartColumn[] = $date;
+            
+            $dayStart = strtotime($date . ' 00:00:00');
+            $dayEnd = strtotime($date . ' 23:59:59');
+            
+            // 当日成功金额
+            $dayMoney = $orderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->where('status', 'in', '1,2')
+                ->sum('total_money') ?: 0;
+            $chartMoneyList[] = $dayMoney;
+            
+            // 当日成功订单数
+            $dayOrder = $orderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->where('status', 'in', '1,2')
+                ->count();
+            $chartOrderList[] = $dayOrder;
+            
+            // 当日成功率
+            $dayTotal = $orderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->count();
+            $dayRate = $dayTotal > 0 ? number_format($dayOrder / $dayTotal * 100, 2) : 0;
+            $chartRateList[] = $dayRate;
+        }
+        
+        $this->view->assign([
+            'todayOrderTotal' => $todayOrderTotal,
+            'todayOrderSuccess' => $todayOrderSuccess,
+            'todayMoney' => number_format($todayMoney, 2, '.', ','),
+            'todayExpenseMoney' => number_format($todayExpenseMoney, 2, '.', ','),
+            'allOrderTotal' => $allOrderTotal,
+            'allOrderSuccess' => $allOrderSuccess,
+            'allMoney' => number_format($allMoney, 2, '.', ','),
+            'allExpenseMoney' => number_format($allExpenseMoney, 2, '.', ','),
+        ]);
+        
+        $this->assignconfig('orderChartColumn', $chartColumn);
+        $this->assignconfig('orderChartMoney', $chartMoneyList);
+        $this->assignconfig('orderChartOrder', $chartOrderList);
+        $this->assignconfig('orderChartRate', $chartRateList);
+
+        // 代付订单统计数据
+        $repayOrderModel = new RepayOrderModel();
+        
+        // 今日代付统计
+        $todayRepayTotal = $repayOrderModel->whereTime('createtime', 'today')->count();
+        $todayRepaySuccess = $repayOrderModel->whereTime('createtime', 'today')->where('daifustatus', '3')->count();
+        
+        // 今日代付金额统计
+        $todayRepayMoney = $repayOrderModel->whereTime('createtime', 'today')->where('daifustatus', '3')->sum('money') ?: 0;
+        $todayRepayCharge = $repayOrderModel->whereTime('createtime', 'today')->where('daifustatus', '3')->sum('charge') ?: 0;
+        
+        // 全部代付统计
+        $allRepayTotal = $repayOrderModel->count();
+        $allRepaySuccess = $repayOrderModel->where('daifustatus', '3')->count();
+        
+        // 全部代付金额统计
+        $allRepayMoney = $repayOrderModel->where('daifustatus', '3')->sum('money') ?: 0;
+        $allRepayCharge = $repayOrderModel->where('daifustatus', '3')->sum('charge') ?: 0;
+        
+        // 代付图表数据（最近7天）
+        $repayChartColumn = [];
+        $repayChartMoneyList = [];
+        $repayChartOrderList = [];
+        $repayChartRateList = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-{$i} days"));
+            $repayChartColumn[] = $date;
+            
+            $dayStart = strtotime($date . ' 00:00:00');
+            $dayEnd = strtotime($date . ' 23:59:59');
+            
+            // 当日成功代付金额
+            $dayMoney = $repayOrderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->where('daifustatus', '3')
+                ->sum('money') ?: 0;
+            $repayChartMoneyList[] = $dayMoney;
+            
+            // 当日成功代付订单数
+            $dayOrder = $repayOrderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->where('daifustatus', '3')
+                ->count();
+            $repayChartOrderList[] = $dayOrder;
+            
+            // 当日成功率
+            $dayTotal = $repayOrderModel->where('createtime', '>=', $dayStart)
+                ->where('createtime', '<=', $dayEnd)
+                ->count();
+            $dayRate = $dayTotal > 0 ? number_format($dayOrder / $dayTotal * 100, 2) : 0;
+            $repayChartRateList[] = $dayRate;
+        }
+        
+        $this->view->assign([
+            'todayRepayTotal' => $todayRepayTotal,
+            'todayRepaySuccess' => $todayRepaySuccess,
+            'todayRepayMoney' => number_format($todayRepayMoney, 2, '.', ','),
+            'todayRepayCharge' => number_format($todayRepayCharge, 2, '.', ','),
+            'allRepayTotal' => $allRepayTotal,
+            'allRepaySuccess' => $allRepaySuccess,
+            'allRepayMoney' => number_format($allRepayMoney, 2, '.', ','),
+            'allRepayCharge' => number_format($allRepayCharge, 2, '.', ','),
+        ]);
+        
+        $this->assignconfig('repayChartColumn', $repayChartColumn);
+        $this->assignconfig('repayChartMoney', $repayChartMoneyList);
+        $this->assignconfig('repayChartOrder', $repayChartOrderList);
+        $this->assignconfig('repayChartRate', $repayChartRateList);
 
         return $this->view->fetch();
     }

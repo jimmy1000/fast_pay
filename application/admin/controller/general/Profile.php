@@ -52,22 +52,15 @@ class Profile extends Backend
             $params = $this->request->post("row/a");
             $params = array_filter(array_intersect_key(
                 $params,
-                array_flip(array('email', 'nickname', 'password', 'avatar'))
+                array_flip(array('nickname', 'password', 'avatar', 'contacts'))
             ));
             unset($v);
-            if (!Validate::is($params['email'], "email")) {
-                $this->error(__("Please input correct email"));
-            }
             if (isset($params['password'])) {
                 if (!Validate::is($params['password'], "/^[\S]{6,30}$/")) {
                     $this->error(__("Please input correct password"));
                 }
                 $params['salt'] = Random::alnum();
                 $params['password'] = md5(md5($params['password']) . $params['salt']);
-            }
-            $exist = Admin::where('email', $params['email'])->where('id', '<>', $this->auth->id)->find();
-            if ($exist) {
-                $this->error(__("Email already exists"));
             }
             if ($params) {
                 $admin = Admin::get($this->auth->id);

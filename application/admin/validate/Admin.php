@@ -14,8 +14,6 @@ class Admin extends Validate
         'username' => 'require|regex:\w{3,30}|unique:admin',
         'nickname' => 'require',
         'password' => 'require|regex:\S{32}',
-        'email'    => 'require|email|unique:admin,email',
-        'mobile'   => 'regex:1[3-9]\d{9}|unique:admin,mobile',
     ];
 
     /**
@@ -34,8 +32,8 @@ class Admin extends Validate
      * 验证场景
      */
     protected $scene = [
-        'add'  => ['username', 'email', 'nickname', 'password', 'mobile'],
-        'edit' => ['username', 'email', 'nickname', 'password', 'mobile'],
+        'add'  => ['username', 'nickname', 'password'],
+        'edit' => ['username', 'nickname', 'password'],
     ];
 
     public function __construct(array $rules = [], $message = [], $field = [])
@@ -44,8 +42,6 @@ class Admin extends Validate
             'username' => __('Username'),
             'nickname' => __('Nickname'),
             'password' => __('Password'),
-            'email'    => __('Email'),
-            'mobile'   => __('Mobile'),
         ];
         $this->message = array_merge($this->message, [
             'username.regex' => __('Please input correct username'),

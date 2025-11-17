@@ -165,6 +165,7 @@
         <ul class="nav nav-tabs">
             <li class="active"><a href="#one" data-toggle="tab">{:__('Dashboard')}</a></li>
             <li><a href="#two" data-toggle="tab">{:__('Custom')}</a></li>
+            <li><a href="#three" data-toggle="tab">{:__('Repay statistics')}</a></li>
         </ul>
     </div>
     <div class="panel-body">
@@ -452,11 +453,306 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="two">
+                <style>
+                    .tab-content > .chart {
+                        padding: 10px;
+                    }
+                </style>
+                <!-- 订单统计卡片 -->
                 <div class="row">
-                    <div class="col-xs-12">
-                        {:__('Custom zone')}
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>{$todayOrderTotal|htmlentities}</h3>
+                                <p>今日订单总数</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-shopping-cart"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                成功: <strong>{$todayOrderSuccess|htmlentities}</strong>笔
+                            </div>
+                        </div>
                     </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-green">
+                            <div class="inner">
+                                <h3>₫{$todayMoney|htmlentities}</h3>
+                                <p>今日收入金额</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-money"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                需要支出: <strong>₫{$todayExpenseMoney|htmlentities}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-yellow">
+                            <div class="inner">
+                                <h3>{$allOrderTotal|htmlentities}</h3>
+                                <p>全部订单总数</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-list"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                成功: <strong>{$allOrderSuccess|htmlentities}</strong>笔
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-red">
+                            <div class="inner">
+                                <h3>₫{$allMoney|htmlentities}</h3>
+                                <p>全部收入金额</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-bar-chart"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                需要支出: <strong>₫{$allExpenseMoney|htmlentities}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
                 </div>
+                <!-- /.row -->
+                
+                <!-- Main row -->
+                <div class="row" style="margin-top:20px;">
+                    <!-- Left col -->
+                    <section class="col-lg-7 connectedSortable">
+                        <!-- Custom tabs (Charts with tabs)-->
+                        <div class="nav-tabs-custom charts-custom">
+                            <!-- Tabs within a box -->
+                            <ul class="nav nav-tabs pull-right">
+                                <li class="active"><a href="#order-line-chart" data-toggle="tab">折线图</a></li>
+                                <li><a href="#order-bar-chart" data-toggle="tab">柱状图</a></li>
+                                <li class="pull-left header"><i class="fa fa-inbox"></i> 代收订单趋势</li>
+                            </ul>
+                            <div class="tab-content no-padding">
+                                <!-- Morris chart - Sales -->
+                                <div class="chart tab-pane active" id="order-line-chart" style="position: relative; height: 300px;"></div>
+                                <div class="chart tab-pane" id="order-bar-chart" style="position: relative; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- /.nav-tabs-custom -->
+                        
+                        <!-- 成功订单数趋势 -->
+                        <div class="nav-tabs-custom charts-custom" style="margin-top: 20px;">
+                            <!-- Tabs within a box -->
+                            <ul class="nav nav-tabs pull-right">
+                                <li class="active"><a href="#order-count-chart" data-toggle="tab">折线图</a></li>
+                                <li class="pull-left header"><i class="fa fa-inbox"></i> 成功订单数趋势</li>
+                            </ul>
+                            <div class="tab-content no-padding">
+                                <!-- Morris chart - Sales -->
+                                <div class="chart tab-pane active" id="order-count-chart" style="position: relative; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- /.nav-tabs-custom -->
+                    </section>
+                    <!-- /.Left col -->
+                    <section class="col-lg-5 connectedSortable">
+                        <!-- Map box -->
+                        <div class="box box-solid bg-light-blue-gradient">
+                            <div class="box-header">
+                                <i class="fa fa-bar-chart"></i>
+                                <h3 class="box-title">成功金额趋势</h3>
+                            </div>
+                            <div class="box-body">
+                                <div id="order-money-chart" style="height: 250px; width: 100%;"></div>
+                            </div>
+                            <!-- /.box-body-->
+                            <div class="box-footer no-border">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <div class="knob-label">统计最近一周成功金额的趋势</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+
+                        <!-- solid sales graph -->
+                        <div class="box box-solid bg-teal-gradient">
+                            <div class="box-header">
+                                <i class="fa fa-line-chart"></i>
+                                <h3 class="box-title">成功率趋势</h3>
+                            </div>
+                            <div class="box-body border-radius-none">
+                                <div class="chart" id="order-rate-chart" style="height: 250px;"></div>
+                            </div>
+                            <!-- /.box-body-->
+                            <div class="box-footer no-border">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <div class="knob-label">统计最近一周成功率的趋势</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </section>
+                    <!-- right col -->
+                </div>
+                <!-- /.row (main row) -->
+            </div>
+            <div class="tab-pane fade" id="three">
+                <style>
+                    .tab-content > .chart {
+                        padding: 10px;
+                    }
+                </style>
+                <!-- 代付统计卡片 -->
+                <div class="row">
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>{$todayRepayTotal|htmlentities}</h3>
+                                <p>今日代付总数</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-credit-card"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                成功: <strong>{$todayRepaySuccess|htmlentities}</strong>笔
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-green">
+                            <div class="inner">
+                                <h3>₫{$todayRepayMoney|htmlentities}</h3>
+                                <p>今日代付金额</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-money"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                手续费: <strong>₫{$todayRepayCharge|htmlentities}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-yellow">
+                            <div class="inner">
+                                <h3>{$allRepayTotal|htmlentities}</h3>
+                                <p>全部代付总数</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-list"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                成功: <strong>{$allRepaySuccess|htmlentities}</strong>笔
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="small-box bg-red">
+                            <div class="inner">
+                                <h3>₫{$allRepayMoney|htmlentities}</h3>
+                                <p>全部代付金额</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-bar-chart"></i>
+                            </div>
+                            <div class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">
+                                手续费: <strong>₫{$allRepayCharge|htmlentities}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./col -->
+                </div>
+                <!-- /.row -->
+                
+                <!-- Main row -->
+                <div class="row" style="margin-top:20px;">
+                    <!-- Left col -->
+                    <section class="col-lg-7 connectedSortable">
+                        <!-- Custom tabs (Charts with tabs)-->
+                        <div class="nav-tabs-custom charts-custom">
+                            <!-- Tabs within a box -->
+                            <ul class="nav nav-tabs pull-right">
+                                <li class="active"><a href="#repay-line-chart" data-toggle="tab">折线图</a></li>
+                                <li><a href="#repay-bar-chart" data-toggle="tab">柱状图</a></li>
+                                <li class="pull-left header"><i class="fa fa-inbox"></i> 代付订单趋势</li>
+                            </ul>
+                            <div class="tab-content no-padding">
+                                <!-- Morris chart - Sales -->
+                                <div class="chart tab-pane active" id="repay-line-chart" style="position: relative; height: 300px;"></div>
+                                <div class="chart tab-pane" id="repay-bar-chart" style="position: relative; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- /.nav-tabs-custom -->
+                        
+                        <!-- 成功代付订单数趋势 -->
+                        <div class="nav-tabs-custom charts-custom" style="margin-top: 20px;">
+                            <!-- Tabs within a box -->
+                            <ul class="nav nav-tabs pull-right">
+                                <li class="active"><a href="#repay-count-chart" data-toggle="tab">折线图</a></li>
+                                <li class="pull-left header"><i class="fa fa-inbox"></i> 成功代付订单数趋势</li>
+                            </ul>
+                            <div class="tab-content no-padding">
+                                <!-- Morris chart - Sales -->
+                                <div class="chart tab-pane active" id="repay-count-chart" style="position: relative; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- /.nav-tabs-custom -->
+                    </section>
+                    <!-- /.Left col -->
+                    <section class="col-lg-5 connectedSortable">
+                        <!-- Map box -->
+                        <div class="box box-solid bg-light-blue-gradient">
+                            <div class="box-header">
+                                <i class="fa fa-bar-chart"></i>
+                                <h3 class="box-title">成功代付金额趋势</h3>
+                            </div>
+                            <div class="box-body">
+                                <div id="repay-money-chart" style="height: 250px; width: 100%;"></div>
+                            </div>
+                            <!-- /.box-body-->
+                            <div class="box-footer no-border">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <div class="knob-label">统计最近一周成功代付金额的趋势</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+
+                        <!-- solid sales graph -->
+                        <div class="box box-solid bg-teal-gradient">
+                            <div class="box-header">
+                                <i class="fa fa-line-chart"></i>
+                                <h3 class="box-title">代付成功率趋势</h3>
+                            </div>
+                            <div class="box-body border-radius-none">
+                                <div class="chart" id="repay-rate-chart" style="height: 250px;"></div>
+                            </div>
+                            <!-- /.box-body-->
+                            <div class="box-footer no-border">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <div class="knob-label">统计最近一周代付成功率的趋势</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box -->
+                    </section>
+                    <!-- right col -->
+                </div>
+                <!-- /.row (main row) -->
             </div>
         </div>
     </div>

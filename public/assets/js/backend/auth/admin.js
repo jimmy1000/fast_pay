@@ -34,8 +34,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'username', title: __('Username')},
                         {field: 'nickname', title: __('Nickname')},
                         {field: 'groups_text', title: __('Group'), operate:false, formatter: Table.api.formatter.label},
-                        {field: 'email', title: __('Email')},
-                        {field: 'mobile', title: __('Mobile')},
+                        {field: 'contacts', title: __('Contacts TG')},
                         {field: 'status', title: __("Status"), searchList: {"normal":__('Normal'),"hidden":__('Hidden')}, formatter: Table.api.formatter.status},
                         {field: 'logintime', title: __('Login time'), formatter: Table.api.formatter.datetime, operate: 'RANGE', addclass: 'datetimerange', sortable: true},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: function (value, row, index) {
