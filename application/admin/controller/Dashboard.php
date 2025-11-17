@@ -4,6 +4,8 @@ namespace app\admin\controller;
 
 use app\admin\model\Admin;
 use app\admin\model\User;
+use app\admin\model\mq\Category;
+use app\admin\model\mq\Account;
 use app\common\controller\Backend;
 use app\common\model\Attachment;
 use fast\Date;
@@ -55,9 +57,13 @@ class Dashboard extends Backend
         }
         $this->view->assign([
             'totaluser'         => User::count(),
-            'totaladdon'        => $totaladdon,
+            'totalagent'        => User::where('group_id', 2)->count(),
             'totaladmin'        => Admin::count(),
-            'totalcategory'     => \app\common\model\Category::count(),
+            'totalcategory'     => Category::count(),
+            'totalusermoney'    => number_format(User::sum('money') ?: 0, 2, '.', ','),
+            'totalwithdrawal'   => number_format(User::sum('withdrawal') ?: 0, 2, '.', ','),
+            'totalmaxmoney'     => number_format(Account::sum('maxmoney') ?: 0, 2, '.', ','),
+            'totaltodaymoney'   => number_format(Account::sum('todaymoney') ?: 0, 2, '.', ','),
             'todayusersignup'   => User::whereTime('jointime', 'today')->count(),
             'todayuserlogin'    => User::whereTime('logintime', 'today')->count(),
             'sevendau'          => User::whereTime('jointime|logintime|prevtime', '-7 days')->count(),
