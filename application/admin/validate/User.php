@@ -13,7 +13,8 @@ class User extends Validate
         'username' => 'require|regex:\w{3,30}|unique:user',
         'nickname' => 'require|unique:user',
         'password' => 'regex:\S{6,30}',
-        'mobile'   => 'unique:user'
+        'mobile'   => 'unique:user',
+        'id'       => 'require|integer'
     ];
 
     /**
@@ -32,6 +33,8 @@ class User extends Validate
     protected $scene = [
         'add'  => [],
         'edit' => ['username', 'nickname', 'password', 'email', 'mobile'],
+        'reset_google_bind' => ['id'],
+        'reset_md5_key' => ['id'],
     ];
 
     public function __construct(array $rules = [], $message = [], $field = [])

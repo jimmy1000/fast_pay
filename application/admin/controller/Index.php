@@ -76,28 +76,32 @@ class Index extends Backend
             $username = $this->request->post('username');
             $password = $this->request->post('password', '', null);
             $keeplogin = $this->request->post('keeplogin');
+            $googlemfa = $this->request->post('googlemfa');
             $token = $this->request->post('__token__');
             $rule = [
                 'username'  => 'require|length:3,30',
                 'password'  => 'require|length:3,30',
+                'googlemfa' => 'require|length:6',
                 '__token__' => 'require|token',
             ];
             $data = [
                 'username'  => $username,
                 'password'  => $password,
+                'googlemfa' => $googlemfa,
                 '__token__' => $token,
             ];
             if (Config::get('fastadmin.login_captcha')) {
                 $rule['captcha'] = 'require|captcha';
                 $data['captcha'] = $this->request->post('captcha');
             }
-            $validate = new Validate($rule, [], ['username' => __('Username'), 'password' => __('Password'), 'captcha' => __('Captcha')]);
+            $validate = new Validate($rule, [], ['username' => __('Username'), 'password' => __('Password'), 'googlemfa' => __('Google MFA Code'), 'captcha' => __('Captcha')]);
             $result = $validate->check($data);
             if (!$result) {
                 $this->error($validate->getError(), $url, ['token' => $this->request->token()]);
             }
+
             AdminLog::setTitle(__('Login'));
-            $result = $this->auth->login($username, $password, $keeplogin ? $keeyloginhours * 3600 : 0);
+            $result = $this->auth->login($username, $password, $googlemfa, $keeplogin ? $keeyloginhours * 3600 : 0);
             if ($result === true) {
                 Hook::listen("admin_login_after", $this->request);
                 $this->success(__('Login successful'), $url, ['url' => $url, 'id' => $this->auth->id, 'username' => $username, 'avatar' => $this->auth->avatar]);

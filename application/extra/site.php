@@ -62,7 +62,7 @@ return array (
   'payrate_percent' => '3',
   'txpaytimestart' => '00:00',
   'txpaytimeend' => '24:00',
-  'paylv' => '100',
+  'paylv' => '50',
   'risk_control' => '50000',
   'usdt_rate' => '50',
   'public_key' => 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu/d6Tqx7e17Cgzc7HDhwKB5IJmqTtRbnQX8kScvWRml1LIe2+TBhU9NRAyjh08iF/w3gIznXv3oogMfABsGGGr0sIwXPHS/uAt8zr5k6YKE5GzDFYfwrVI8865pJBAwmkjVPlvxYDueBv6pPj/yPUhJWkYepFMinIL0IBipTbIfNynR/ynHlezWvSkXkhPvW2rwhbKW+wUewl1KXsEC21/PaDuWYjOTIZ0XifRtKS/KU4MWlf8Oj/YezPvkmz5u5i7wfzOLK1QO7LKbGJf/VweREE+FeUpxCwvO42CpbJOzIMAvna467GuxrM2OyPvKApBHBWjcTOZ+RZ+5R7bHe2QIDAQAB',
@@ -76,4 +76,5 @@ return array (
   'daily_withdraw_ratio' => '80',
   'deposit_fee_rate' => '1.5',
   'daily_limit' => '10000',
+  'back_rate_switch' => '0',
 );

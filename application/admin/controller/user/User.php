@@ -4,6 +4,8 @@ namespace app\admin\controller\user;
 
 use app\common\controller\Backend;
 use app\common\library\Auth;
+use think\Exception;
+use think\Db;
 
 /**
  * 会员管理
@@ -106,4 +108,255 @@ class User extends Backend
         $this->success();
     }
 
+    /**
+     * 重设md5密钥
+     */
+    public function resetMd5Key()
+    {
+        $data = [
+            'id' => $this->request->param('id', '')
+        ];
+        //验证规则
+        $result = $this->validate($data, 'User.reset_md5_key');
+        if (true !== $result) {
+            $this->error($result);
+        }
+        try {
+            \app\admin\model\User::resetMd5Key($data['id']);
+            $this->success(__('Reset Key Success'));
+        } catch (Exception $e) {
+            $this->error(__('Reset Key Error %s', $e->getMessage()));
+        }
+    }
+
+    /**
+     * 清除谷歌绑定
+     */
+    public function resetGoogleBind()
+    {
+        $data = [
+            'id' => $this->request->param('id', '')
+        ];
+        $result = $this->validate($data, 'User.reset_google_bind');
+        if (true !== $result) {
+            $this->error($result);
+        }
+        try {
+            \app\common\model\User::clearGoogleSecret($data['id']);
+            $this->success(__('Reset Google Binding Success'));
+        } catch (Exception $e) {
+            $this->error(__('Reset Google Binding Error %s', $e->getMessage()));
+        }
+    }
+
+    /**
+     * 内充余额
+     */
+    public function recharge()
+    {
+        if ($this->request->isAjax()) {
+            $data = $this->request->only(['merchant_id', 'money', 'code']);
+            
+            $rules = [
+                'merchant_id|商户号' => 'require|integer|max:24',
+                'money|充值金额' => 'require|float|>:0',
+                'code|谷歌验证码' => 'require',
+            ];
+            $result = $this->validate($data, $rules);
+            
+            if (true !== $result) {
+                $this->error($result);
+            }
+            
+            // 验证管理员的谷歌验证码
+            $adminModel = \app\admin\model\Admin::get($this->auth->id);
+            if (!$adminModel) {
+                $this->error('管理员信息不存在');
+            }
+            if (!admin_google_verify($adminModel, $data['code'])) {
+                $this->error(__('googleMFA error Please try again'));
+            }
+            
+            $userModel = \app\common\model\User::get(['merchant_id' => $data['merchant_id']]);
+            if (is_null($userModel)) {
+                $this->error('商户不存在！');
+            }
+            
+            $merchantId = $userModel['merchant_id'];
+            $money = $data['money'];
+            $commission = 0;
+            $style = 1;
+            
+            if (!is_numeric($money) || $money <= 0) {
+                $this->error('请填写正确的金额');
+            }
+            
+            $money = sprintf('%.2f', $money);
+            
+            Db::startTrans();
+            try {
+                // 创建订单
+                $orderData = [
+                    'merchant_id' => $merchantId,
+                    'orderno' => 'NC' . date('YmdHis') . mt_rand(100000, 999999),
+                    'sys_orderno' => 'CZ' . date('YmdHis') . mt_rand(100000, 999999),
+                    'total_money' => $money,
+                    'have_money' => $money,
+                    'email' => 'recharge@recharge.com',
+                    'phone' => '0',
+                    'productInfo' => '内充余额',
+                    'name' => 'admin-recharge',
+                    'utr' => '0',
+                    'upstream_money' => 0,
+                    'style' => $style,
+                    'status' => 1,
+                    'rate' => 0,
+                    'channel_rate' => 0,
+                    'api_upstream_id' => 0,
+                    'api_account_id' => 0,
+                    'api_type_id' => 0,
+                    'req_info' => urldecode(http_build_query($data)),
+                    'req_ip' => $this->request->ip(),
+                ];
+                $orderModel= \app\common\model\Order::create($orderData);
+                
+                // 更新用户内充金额
+                $userModel->setInc('recharge', $money);
+                
+                // 资金变动
+                \app\common\model\User::money($money, $userModel->id, '总后台内充：' . $money . '越南盾',$orderModel['sys_orderno'],1);
+                
+                // 写入用户日志表
+                \app\common\model\UserLog::addLog(
+                    $merchantId,
+                    '管理员发起商户内充【' . $merchantId . '】【' . $money . '越南盾】手续费：' . $commission . '越南盾'
+                );
+                
+                Db::commit();
+            } catch (\Exception $e) {
+                Db::rollback();
+                $this->error($e->getMessage());
+            }
+            
+            $this->success('内充成功！');
+        }
+        
+        $id = $this->request->param('id/d', 0);
+        $userModel = \app\common\model\User::get($id);
+        if (is_null($userModel)) {
+            $this->error('商户不存在！');
+        }
+        
+        $this->assign('merchant_id', $userModel['merchant_id']);
+        $this->assign('money', $userModel['money']);
+
+        return $this->view->fetch();
+    }
+
+    /**
+     * 结算余额
+     */
+    public function settlement()
+    {
+        if ($this->request->isAjax()) {
+            $data = $this->request->only(['merchant_id', 'money', 'bankcardId', 'status', 'msg', 'bankname']);
+            $rules = [
+                'merchant_id|商户号' => 'require|integer|max:24',
+                'money|结算金额' => 'require|float|>:0',
+                'bankcardId|结算卡id' => 'require|integer|max:12',
+                'status|结算状态' => 'require|in:0,1,2'
+            ];
+            $result = $this->validate($data, $rules);
+            if (true !== $result) {
+                $this->error($result);
+            }
+            $userModel = \app\common\model\User::get(['merchant_id' => $data['merchant_id']]);
+            if (is_null($userModel)) {
+                $this->error('商户不存在！');
+            }
+            $merchantId = $userModel['merchant_id'];
+            $money = $data['money'];
+            $balance = $userModel['money'];
+            $freezeMoney = $userModel->getFreezeMoney();
+            $userMoney = bcsub($balance, $freezeMoney, 2);
+            $commission = config('site.back_rate_switch') == 1 ? $userModel->commission($money) : 0;
+            $needMoney = bcadd($money, $commission, 2);
+
+            if (!is_numeric($money) || $money <= 0) {
+                $this->error('请填写正确的金额');
+            }
+            if ($needMoney > $userMoney) {
+                $this->error('支付金额不足,当前需要' . $needMoney . '越南盾,手续费：' . $commission . '越南盾！');
+            }
+
+            $bankcardModel = (new \app\common\model\Bankcard)->where([
+                'id' => $data['bankcardId'],
+                'merchant_id' => $data['merchant_id'],
+                'status' => '1'
+            ])->find();
+            if (is_null($bankcardModel)) {
+                $this->error('银行卡无法支付，请更换');
+            }
+            var_dump($bankcardModel);exit();
+            $redislock = redisLocker();
+            $resource = $redislock->lock('pay.' . $merchantId, 3000);
+            if (!$resource) {
+                $this->error('系统繁忙，请重试');
+            }
+
+            Db::startTrans();
+            try {
+                $payData = [
+                    'merchant_id' => $merchantId,
+                    'orderno' => 'TX' . date('YmdHis') . mt_rand(100000, 999999),
+                    'style' => '0',
+                    'apply_style'=>'1',
+                    'money' => $money,
+                    'account' => $bankcardModel['account'] ?? '',
+                    'name' => $bankcardModel['name'] ?? '',
+                    'phone' => $bankcardModel['phone'] ?? '',
+                    'email' => $bankcardModel['email'] ?? '',
+                    'bank_code' => $bankcardModel['bank_code'] ?? '',
+                    'caraddresstype' => $bankcardModel['caraddresstype'] ?? '',
+                    'caraddress' => $bankcardModel['caraddress'] ?? '',
+                    'status' => $data['status'],
+                    'msg' => $data['msg'] ?? '',
+                    'bankname' => $data['bankname'] ?? '',
+                    'daifustatus' => '0',
+                    'charge' => $commission,
+                    'req_info' => '',
+                    'req_ip' => '总后台结算',
+                    'createtime' => time()
+                ];
+                $payModel = \app\common\model\Pay::create($payData);
+                $userModel->setInc('withdrawal', $money);
+                \app\common\model\User::money(-$needMoney, $userModel->id, '提现：' . $money . '越南盾，手续费：' . $commission . '越南盾', $payModel['orderno'], '2');
+                \app\common\model\UserLog::addLog($merchantId, '管理员发起商户提现【' . $merchantId . '】【' . $money . '越南盾】手续费：' . $commission . '越南盾');
+                Db::commit();
+                $redislock->unlock(['resource' => 'pay.' . $merchantId, 'token' => $resource['token']]);
+            } catch (\Exception $e) {
+                Db::rollback();
+                $redislock->unlock(['resource' => 'pay.' . $merchantId, 'token' => $resource['token']]);
+                $this->error($e->getMessage());
+            }
+
+            $this->success('结算成功！');
+        }
+
+        $id = $this->request->param('id/d', 0);
+        $userModel = \app\common\model\User::get($id);
+        if (is_null($userModel)) {
+            $this->error('商户不存在！');
+        }
+        $this->assign('merchant_id', $userModel['merchant_id']);
+        $this->assign('money', $userModel['money']);
+        $this->assign('freezeMoney', $userModel->getFreezeMoney());
+        $this->assign('settle', $userModel->settle());
+        $bankcardList = (new \app\common\model\Bankcard)->where([
+            'merchant_id' => $userModel['merchant_id'],
+            'status' => '1'
+        ])->field('id,name,bankaccount,bankcardtype,caraddresstype,caraddress')->select();
+        $this->assign('bankcardList', collection((array)$bankcardList)->toArray());
+        return $this->view->fetch();
+    }
 }

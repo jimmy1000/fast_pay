@@ -26,6 +26,7 @@ class Settle extends Model
     // 追加属性
     protected $append = [
         'style_text',
+        'apply_style_text',
         'caraddresstype_text',
         'status_text',
         'paytime_text'
@@ -38,6 +39,11 @@ class Settle extends Model
         return ['0' => __('Style 0'), '1' => __('Style 1')];
     }
 
+    public function getApplyStyleList()
+    {
+        return ['0' => __('Apply_style 0'), '1' => __('Apply_style 1')];
+    }
+
     public function getCaraddresstypeList()
     {
         return ['TRC20' => __('TRC20'), 'ERC20' => __('ERC20'), '-' => __('-')];
@@ -45,7 +51,7 @@ class Settle extends Model
 
     public function getStatusList()
     {
-        return ['0' => __('Status 0'), '1' => __('Status 1'), '2' => __('Status 2'), '3' => __('Status 3'), '4' => __('Status 4')];
+        return ['0' => __('Status 0'), '1' => __('Status 1'), '2' => __('Status 2')];
     }
 
 
@@ -53,6 +59,14 @@ class Settle extends Model
     {
         $value = $value ?: ($data['style'] ?? '');
         $list = $this->getStyleList();
+        return $list[$value] ?? '';
+    }
+
+
+    public function getApplyStyleTextAttr($value, $data)
+    {
+        $value = $value ?: ($data['apply_style'] ?? '');
+        $list = $this->getApplyStyleList();
         return $list[$value] ?? '';
     }
 

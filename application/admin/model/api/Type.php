@@ -64,4 +64,29 @@ class Type extends Model
     {
         return $this->belongsTo('Rule', 'api_rule_id', 'id', [], 'LEFT')->setEagerlyType(0);
     }
+
+    /**
+     * 获取开启的接口类型及可选规则列表
+     *
+     * @return array
+     */
+    public static function getOpenListAndRule()
+    {
+        $types = self::where('status', 1)
+            ->order('weight', 'desc')
+            ->field('id,name,api_rule_id')
+            ->select();
+        $types = $types ? collection($types)->toArray() : [];
+
+        $ruleList = \app\admin\model\api\Rule::where('status', 1)
+            ->order('weigh', 'desc')
+            ->column('name', 'id');
+
+        foreach ($types as &$type) {
+            $type['rule_list'] = $ruleList;
+        }
+        unset($type);
+
+        return $types;
+    }
 }

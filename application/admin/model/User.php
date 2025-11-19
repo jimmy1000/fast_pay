@@ -148,4 +148,18 @@ class User extends Model
         return $this->belongsTo('UserGroup', 'group_id', 'id', [], 'LEFT')->setEagerlyType(0);
     }
 
+    /**
+     * 重新设置系统密钥
+     * @param $userid
+     * @return bool
+     */
+    public static function resetMd5Key($userid)
+    {
+        return self::update([
+            'md5key' => Random::alpha(32)
+        ], [
+            'id' => $userid
+        ]);
+    }
+
 }

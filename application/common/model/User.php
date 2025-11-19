@@ -90,7 +90,7 @@ class User extends Model
      * @param int    $user_id 会员ID
      * @param string $memo    备注
      */
-    public static function money($money, $user_id, $memo)
+    public static function money($money, $user_id, $memo,$orderno, $style = '1')
     {
         Db::startTrans();
         try {
@@ -102,7 +102,7 @@ class User extends Model
                 //更新会员信息
                 $user->save(['money' => $after]);
                 //写入日志
-                MoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo]);
+                MoneyLog::create(['user_id' => $user_id, 'money' => $money, 'before' => $before, 'after' => $after, 'memo' => $memo,'orderno' => $orderno,'style' => $style]);
             }
             Db::commit();
         } catch (\Exception $e) {
@@ -152,4 +152,167 @@ class User extends Model
         }
         return $level;
     }
+
+    /**
+     * 代理收益类型比例
+     * @param $value
+     * @return mixed
+     */
+    public function getAgentRatioAttr($value)
+    {
+        return $value == '-1' ? config('site.agent_ratio') : $value;
+    }
+    /**
+     * 结算类型
+     * @param $value
+     */
+    public function getBalancestyleAttr($value){
+        return $value == '-1' ? config('site.balancestyle') : $value;
+    }
+
+    /**
+     * 结算周期
+     * @param $value
+     * @return mixed
+     */
+    public function getBalancetimeAttr($value){
+        return $value == '-1' ? config('site.balancetime') : $value;
+    }
+
+    /**
+     * 当日提现比例
+     * @param $value
+     * @return mixed
+     */
+    public function getPaylvAttr($value){
+        return $value == '-1' ? config('site.paylv') : $value;
+    }
+
+    /**
+     * 提现费率类型
+     */
+    public function getPayrateTypeAttr($value){
+        return $value == '-1' ? config('site.payrate_type') : $value;
+    }
+
+
+    /**
+     * 提现费率
+     * @param $value
+     */
+    public function getPayrateAttr($value){
+        return $value < 0 ? config('site.payrate') : $value;
+    }
+    public function getPayratePercentAttr($value){
+        return $value < 0 ? config('site.payrate_percent') : $value;
+    }
+    public function getPayrateEachAttr($value){
+        return $value < 0 ? config('site.payrate_each') : $value;
+    }
+    /**
+     * 获取用户的冻结金额
+     */
+    public function getFreezeMoney(){
+        $money =  Order::getFrozenMoney($this->getAttr('merchant_id'),$this->settle());
+        return $money;
+    }
+    /**
+     * 结算信息
+     */
+    public function settle(){
+        return $this->getAttr('balancestyle').'+'.$this->getAttr('balancetime');
+    }
+    /**
+     * 代付手续费 新版
+     */
+    public function commission($money)
+    {
+        // 获取优先级：模型属性 > 全局配置
+        $percent = $this->getAttr('payrate_percent');
+        $each = $this->getAttr('payrate_each');
+
+        $percent = $percent >= 1 ? $percent : config('site.payrate_percent');
+        $each = $each >= 1 ? $each : config('site.each');
+
+        // 手续费计算
+        $percentFee = bcdiv(bcmul($money, $percent, 4), 100, 2);
+        $totalFee = bcadd($percentFee, $each, 2);
+
+        return $totalFee;
+    }
+    /**
+     * 代付风控通知tg
+     */
+    public function RiskControl($money,$order_no)
+    {
+        $risk = $this->getAttr('risk_control');
+        $risk_value = $risk == -1 ? config('site.risk_control') : $risk;
+
+        if ($money >= $risk_value) {
+            $payload = [
+                'create_time' => time(),
+                'money'      => $money,
+                'merchantId' => $this->merchant_id,
+                'risk_money' => $risk_value,
+                'username'   => $this->username,
+                'order_no'   => $order_no,
+                'contacts'   => $this->contacts,
+            ];
+
+            $url = "http://127.0.0.1:9000/notify";
+            $result = $this->sendToUserbot($url, $payload);
+            // 1. HTTP 请求失败
+            if ($result['http_code'] !== 200) {
+                return [
+                    'status'  => true,  // 风控触发了，只是通知失败
+                    'message' => '通知请求失败: ' . $result['error'],
+                    'data'    => $result
+                ];
+            }
+
+            // 2. HTTP 200，但 JSON 格式错误
+            $json = json_decode($result['response'], true);
+            if (!$json) {
+                return [
+                    'status'  => true,
+                    'message' => '通知返回异常，非 JSON 格式',
+                    'data'    => $result
+                ];
+            }
+
+            // 3. 正常解析 JSON
+            if (isset($json['status']) && $json['status'] === 'success') {
+                return [
+                    'status'  => true,
+                    'message' => '通知发送成功',
+                    'data'    => $json
+                ];
+            } else {
+                return [
+                    'status'  => true,
+                    'message' => '通知发送失败',
+                    'data'    => $json
+                ];
+            }
+        }
+
+        // 不触发风控
+        return [
+            'status'  => false,
+            'message' => '未触发风控'
+        ];
+    }
+    /**
+     * 清除谷歌令牌绑定
+     * @param int $user_id
+     * @return bool
+     */
+    public static function clearGoogleSecret($user_id)
+    {
+        $user = self::get($user_id);
+        $user->googlesecret = '';
+        $user->googlebind = 0;
+        return $user->save();
+    }
+
 }

@@ -4,6 +4,7 @@
 
 use think\exception\HttpResponseException;
 use think\Response;
+use google\GoogleAuthenticator;
 
 if (!function_exists('__')) {
 
@@ -266,6 +267,33 @@ if (!function_exists('addtion')) {
             }
         }
         return $items;
+    }
+}
+
+if (!function_exists('admin_google_verify')) {
+    /**
+     * 验证管理员谷歌验证码
+     *
+     * @param \app\admin\model\Admin|array|null $admin 管理员模型或数组
+     * @param string $code 输入的谷歌验证码
+     * @param string $defaultCode 未绑定时允许的默认验证码
+     * @return bool
+     */
+    function admin_google_verify($admin, $code, $defaultCode = '888888')
+    {
+        if (!$admin) {
+            return false;
+        }
+        $code = trim((string)$code);
+        if ($code === '') {
+            return false;
+        }
+        // 管理员绑定了谷歌验证时严格校验
+        if (!empty($admin->googlebind) && !empty($admin->googlesecret)) {
+            return GoogleAuthenticator::verifyCode($admin->googlesecret, $code);
+        }
+        // 未绑定时使用默认验证码
+        return $code === $defaultCode;
     }
 }
 

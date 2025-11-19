@@ -7,6 +7,7 @@ use app\admin\model\AuthGroupAccess;
 use app\common\controller\Backend;
 use fast\Random;
 use fast\Tree;
+use google\GoogleAuthenticator;
 use think\Db;
 use think\Validate;
 
@@ -291,5 +292,91 @@ class Admin extends Backend
         $this->dataLimit = 'auth';
         $this->dataLimitField = 'id';
         return parent::selectpage();
+    }
+
+    /**
+     * 绑定谷歌MFA
+     */
+    public function mfabind()
+    {
+        $ids = $this->request->get('ids');
+        $row = $this->model->get(['id' => $ids]);
+        if (!$row) {
+            $this->error(__('No Results were found'));
+        }
+        if (!in_array($row->id, $this->childrenAdminIds)) {
+            $this->error(__('You have no permission'));
+        }
+        
+        if ($this->request->isPost()) {
+            $this->token();
+            $code = $this->request->post('code');
+            $secret = $this->request->post('secret');
+            
+            if (empty($code) || empty($secret)) {
+                $this->error('请输入验证码');
+            }
+            
+            // 验证验证码
+            if (!GoogleAuthenticator::verifyCode($secret, $code)) {
+                $this->error('验证码不正确，请重新输入');
+            }
+            
+            // 保存密钥和绑定状态
+            $row->googlesecret = $secret;
+            $row->googlebind = 1;
+            $row->save();
+            
+            $this->success('绑定成功');
+        }
+        
+        // 生成密钥和二维码
+        $secret = GoogleAuthenticator::generateSecret();
+        $siteName = config('site.name') ?: 'FastAdmin';
+        $qrUrl = GoogleAuthenticator::getQRCodeImageUrl(
+            $row->username . '@' . $siteName,
+            $secret,
+            $siteName,
+            200
+        );
+        
+        $this->view->assign('row', $row);
+        $this->view->assign('secret', $secret);
+        $this->view->assign('qrUrl', $qrUrl);
+        return $this->view->fetch();
+    }
+
+    /**
+     * 解绑谷歌MFA
+     */
+    public function mfaunbind()
+    {
+        if (!$this->request->isAjax()) {
+            $this->error('非法请求');
+        }
+
+        $id = $this->request->post('id');
+        $code = $this->request->post('code');
+
+        if (!$id || !$code) {
+            $this->error('参数错误');
+        }
+
+        $row = $this->model->get($id);
+        if (!$row) {
+            $this->error(__('No Results were found'));
+        }
+        if (!in_array($row->id, $this->childrenAdminIds)) {
+            $this->error(__('You have no permission'));
+        }
+        if (empty($row->googlesecret) || !GoogleAuthenticator::verifyCode($row->googlesecret, $code)) {
+            $this->error('验证码不正确，请重新输入');
+        }
+
+        $row->googlesecret = '';
+        $row->googlebind = 0;
+        $row->save();
+
+        $this->success('解绑成功');
     }
 }

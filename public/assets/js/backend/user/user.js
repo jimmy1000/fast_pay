@@ -40,6 +40,47 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'logintime', title: __('Logintime'), operate: 'RANGE', addclass: 'datetimerange', formatter: Table.api.formatter.datetime},
                         {field: 'createtime', title: __('Createtime'), operate: 'RANGE', addclass: 'datetimerange', formatter: Table.api.formatter.datetime},
                         {field: 'status', title: __('Status'), formatter: Table.api.formatter.status, searchList: {normal: __('Normal'), hidden: __('Hidden')}},
+                        {
+                            field: 'handler',
+                            title: '业务处理',
+                            table: table,
+                            operate: false,
+                            events: Controller.events.handler,
+                            buttons: [
+                                {
+                                    name: 'reset-key',
+                                    title: '重置MD5密钥',
+                                    text: '重置秘钥',
+                                    classname: 'btn btn-xs btn-primary reset-key',
+                                    icon: 'fa fa-key'
+                                },
+                                {
+                                    name: 'clear-google',
+                                    title: '解除谷歌令牌绑定',
+                                    text: '解除谷歌令牌',
+                                    classname: 'btn btn-xs btn-warning clear-googlesecret',
+                                    icon: 'fa fa-unlock',
+                                    visible: function(row) {
+                                        return row.googlebind == '1' || row.googlebind == 1;
+                                    }
+                                },
+                                {
+                                    name: 'recharge',
+                                    title: '内充余额',
+                                    text: '内充余额',
+                                    classname: 'btn btn-xs btn-success btn-recharge',
+                                    icon: 'fa fa-money'
+                                },
+                                {
+                                    name: 'settlement',
+                                    title: '结算余额',
+                                    text: '结算余额',
+                                    classname: 'btn btn-xs btn-info btn-settlement',
+                                    icon: 'fa fa-exchange'
+                                }
+                            ],
+                            formatter: Table.api.formatter.buttons
+                        },
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
                     ]
                 ]
@@ -69,9 +110,60 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
         edit: function () {
             Controller.api.bindevent();
         },
+        recharge: function () {
+            Controller.api.bindevent();
+        },
+        settlement: function () {
+            Controller.api.bindevent();
+        },
         api: {
             bindevent: function () {
                 Form.api.bindevent($("form[role=form]"));
+            }
+        },
+        events: {
+            handler: {
+                'click .reset-key': function (e, value, row) {
+                    e.stopPropagation();
+                    Layer.confirm(
+                        '确定要重置商户【' + (row.merchant_id || row.id) + '】的MD5密钥吗？',
+                        {icon: 3, title: '警告', shadeClose: true},
+                        function (index) {
+                            Fast.api.ajax({
+                                url: Fast.api.fixurl('user/user/resetmd5key'),
+                                data: {id: row.id}
+                            }, function () {
+                                Layer.close(index);
+                            });
+                        }
+                    );
+                },
+                'click .clear-googlesecret': function (e, value, row) {
+                    e.stopPropagation();
+                    var that = this;
+                    var table = $(that).closest('table');
+                    Layer.confirm(
+                        '确定要解除商户【' + (row.merchant_id || row.id) + '】的谷歌令牌绑定吗？',
+                        {icon: 3, title: '警告', shadeClose: true},
+                        function (index) {
+                            Fast.api.ajax({
+                                url: Fast.api.fixurl('user/user/resetGoogleBind'),
+                                data: {id: row.id}
+                            }, function () {
+                                Layer.close(index);
+                                table.bootstrapTable('refresh');
+                            });
+                        }
+                    );
+                },
+                'click .btn-recharge': function (e, value, row) {
+                    e.stopPropagation();
+                    Fast.api.open(Fast.api.fixurl('user/user/recharge/id/' + row.id), '内充余额');
+                },
+                'click .btn-settlement': function (e, value, row) {
+                    e.stopPropagation();
+                    Fast.api.open(Fast.api.fixurl('user/user/settlement/id/' + row.id), '结算余额');
+                }
             }
         }
     };

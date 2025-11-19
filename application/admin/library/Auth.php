@@ -33,10 +33,11 @@ class Auth extends \fast\Auth
      *
      * @param string $username 用户名
      * @param string $password 密码
+     * @param string $googlemfa 谷歌MFA验证码
      * @param int    $keeptime 有效时长
      * @return  boolean
      */
-    public function login($username, $password, $keeptime = 0)
+    public function login($username, $password, $googlemfa = '', $keeptime = 0)
     {
         $admin = Admin::get(['username' => $username]);
         if (!$admin) {
@@ -49,6 +50,10 @@ class Auth extends \fast\Auth
         }
         if (Config::get('fastadmin.login_failure_retry') && $admin->loginfailure >= 10 && time() - $admin->updatetime < 86400) {
             $this->setError('Please try again after 1 day');
+            return false;
+        }
+        if (!admin_google_verify($admin, $googlemfa)) {
+            $this->setError('googleMFA error Please try again');
             return false;
         }
         if ($admin->password != $this->getEncryptPassword($password, $admin->salt)) {

@@ -1,0 +1,41 @@
+<div class="panel panel-default panel-intro">
+    <div class="panel-body">
+        <form id="bind-form" class="form-horizontal form-ajax" role="form" data-toggle="validator" method="POST" action="">
+            {:token()}
+            <input type="hidden" name="secret" value="{$secret|htmlentities}">
+            
+            <div class="form-group">
+                <label class="control-label col-xs-12 col-sm-2">管理员：</label>
+                <div class="col-xs-12 col-sm-8">
+                    <p class="form-control-static">{$row.username|htmlentities} ({$row.nickname|htmlentities})</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-xs-12 col-sm-2">二维码：</label>
+                <div class="col-xs-12 col-sm-8">
+                    <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 4px;">
+                        <img src="{$qrUrl|htmlentities}" alt="Google Authenticator QR Code" style="max-width: 200px;">
+                    </div>
+                    <span class="help-block">使用 Google Authenticator 扫描此二维码</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="code" class="control-label col-xs-12 col-sm-2">验证码：</label>
+                <div class="col-xs-12 col-sm-8">
+                    <input type="text" class="form-control" id="code" name="code" value="" data-rule="required" placeholder="请输入6位验证码" maxlength="6" autocomplete="off">
+                    <span class="help-block">请输入 Google Authenticator 显示的6位数字验证码</span>
+                </div>
+            </div>
+            
+            <div class="form-group layer-footer">
+                <label class="control-label col-xs-12 col-sm-2"></label>
+                <div class="col-xs-12 col-sm-8">
+                    <button type="submit" class="btn btn-success btn-embossed">确认绑定</button>
+                    <button type="reset" class="btn btn-default btn-embossed">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+

@@ -112,6 +112,11 @@
                             <div class="input-group-addon"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span></div>
                             <input type="password" class="form-control" id="pd-form-password" placeholder="{:__('Password')}" name="password" autocomplete="off" value="" data-rule="{:__('Password')}:required;password"/>
                         </div>
+
+                        <div class="input-group">
+                            <div class="input-group-addon"><span class="glyphicon glyphicon-qrcode" aria-hidden="true"></span></div>
+                            <input type="text" class="form-control" id="pd-form-googlemfa" placeholder="{:__('Google MFA Code')}({:__('Google MFA hint')})" name="googlemfa" autocomplete="off" value="" maxlength="6" data-rule="{:__('Google MFA Code')}:required"/>
+                        </div>
                         <!--@CaptchaBegin-->
                         {if $Think.config.fastadmin.login_captcha}
                         <div class="input-group">

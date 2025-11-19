@@ -215,7 +215,9 @@ return [
     'Rule tips'                                             => '菜单规则通常对应一个控制器的方法,同时菜单栏数据也从规则中获取',
     'Access is allowed only to the super management group'  => '仅超级管理组能访问',
     'Local addon'                                           => '本地插件',
-    // 前台菜单
+    'googleMFA error Please try again'                      => 'googleMFA验证码错误，请重试',
+    'Google MFA hint'                                      => '未绑定 888888',
+    // 前台菜单 
     'Frontend'                                              => '前台',
     'API Interface'                                         => 'API接口',
     'User Module'                                           => '会员模块',

@@ -23,6 +23,7 @@ class Settle extends Backend
         parent::_initialize();
         $this->model = new \app\admin\model\repay\Settle;
         $this->view->assign("styleList", $this->model->getStyleList());
+        $this->view->assign("applyStyleList", $this->model->getApplyStyleList());
         $this->view->assign("caraddresstypeList", $this->model->getCaraddresstypeList());
         $this->view->assign("statusList", $this->model->getStatusList());
     }

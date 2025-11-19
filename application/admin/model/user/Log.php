@@ -4,17 +4,11 @@ namespace app\admin\model\user;
 
 use think\Model;
 
-
 class Log extends Model
 {
-
-    
-
-    
-
     // 表名
     protected $name = 'user_log';
-    
+
     // 自动写入时间戳字段
     protected $autoWriteTimestamp = 'integer';
 
@@ -24,17 +18,14 @@ class Log extends Model
     protected $deleteTime = false;
 
     // 追加属性
-    protected $append = [
+    protected $append = [];
 
-    ];
-    
-
-    
-
-
-
-
-
-
-
+    /**
+     * 记录用户日志
+     *
+     * @param string $merchantid
+     * @param string $content
+     * @return static
+     */
 }
+
