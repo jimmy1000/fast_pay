@@ -259,16 +259,34 @@ class User extends Backend
     public function settlement()
     {
         if ($this->request->isAjax()) {
-            $data = $this->request->only(['merchant_id', 'money', 'bankcardId', 'status', 'msg', 'bankname']);
+            $data = $this->request->only([
+                'merchant_id',
+                'money',
+                'bankcardId',
+                'status',
+                'msg',
+                'bankname',
+                'usdt_rate',
+                'usdt_money',
+                'code',
+            ]);
             $rules = [
                 'merchant_id|商户号' => 'require|integer|max:24',
                 'money|结算金额' => 'require|float|>:0',
                 'bankcardId|结算卡id' => 'require|integer|max:12',
-                'status|结算状态' => 'require|in:0,1,2'
+                'status|结算状态' => 'require|in:0,1,2',
+                'code|谷歌验证码' => 'require',
             ];
             $result = $this->validate($data, $rules);
             if (true !== $result) {
                 $this->error($result);
+            }
+            $adminModel = \app\admin\model\Admin::get($this->auth->id);
+            if (!$adminModel) {
+                $this->error('管理员信息不存在');
+            }
+            if (!admin_google_verify($adminModel, $data['code'])) {
+                $this->error(__('googleMFA error Please try again'));
             }
             $userModel = \app\common\model\User::get(['merchant_id' => $data['merchant_id']]);
             if (is_null($userModel)) {
@@ -297,7 +315,19 @@ class User extends Backend
             if (is_null($bankcardModel)) {
                 $this->error('银行卡无法支付，请更换');
             }
-            var_dump($bankcardModel);exit();
+            $isUsdt = strtolower((string)$bankcardModel['bankcardtype']) === 'usdt';
+            $usdtRate = 0;
+            $usdtMoney = 0;
+            if ($isUsdt) {
+                $usdtRate = $data['usdt_rate'] ?? '';
+                $usdtMoney = $data['usdt_money'] ?? '';
+                if (!is_numeric($usdtRate) || $usdtRate <= 0) {
+                    $this->error('请填写正确的汇率');
+                }
+                if (!is_numeric($usdtMoney) || $usdtMoney <= 0) {
+                    $this->error('请填写正确的USDT金额');
+                }
+            }
             $redislock = redisLocker();
             $resource = $redislock->lock('pay.' . $merchantId, 3000);
             if (!$resource) {
@@ -307,28 +337,30 @@ class User extends Backend
             Db::startTrans();
             try {
                 $payData = [
-                    'merchant_id' => $merchantId,
-                    'orderno' => 'TX' . date('YmdHis') . mt_rand(100000, 999999),
-                    'style' => '0',
-                    'apply_style'=>'1',
-                    'money' => $money,
-                    'account' => $bankcardModel['account'] ?? '',
-                    'name' => $bankcardModel['name'] ?? '',
-                    'phone' => $bankcardModel['phone'] ?? '',
-                    'email' => $bankcardModel['email'] ?? '',
-                    'bank_code' => $bankcardModel['bank_code'] ?? '',
-                    'caraddresstype' => $bankcardModel['caraddresstype'] ?? '',
-                    'caraddress' => $bankcardModel['caraddress'] ?? '',
-                    'status' => $data['status'],
-                    'msg' => $data['msg'] ?? '',
-                    'bankname' => $data['bankname'] ?? '',
-                    'daifustatus' => '0',
-                    'charge' => $commission,
-                    'req_info' => '',
-                    'req_ip' => '总后台结算',
-                    'createtime' => time()
+                    'merchant_id'    => $merchantId,
+                    'orderno'        => 'TX' . date('YmdHis') . mt_rand(100000, 999999),
+                    'style'          => $isUsdt ? '1' : '0',
+                    'apply_style'    => '1',
+                    'money'          => $money,
+                    'charge'         => $commission,
+                    'caraddresstype' => $isUsdt ? ($bankcardModel['caraddresstype'] ?? '-') : '-',
+                    'caraddress'     => $isUsdt ? ($bankcardModel['caraddress'] ?? '-') : '-',
+                    'usdt_rate'      => $isUsdt ? $usdtRate : 0,
+                    'usdt'           => $isUsdt ? $usdtMoney : 0,
+                    'msg'            => $data['msg'] ?? '管理员给商户提现',
+                    'image'          => '',
+                    'status'         => $data['status'],
+                    'account'        => $bankcardModel['bankaccount'] ?? '',
+                    'name'           => $bankcardModel['name'] ?? '',
+                    'phone'          => $bankcardModel['phone'] ?? '',
+                    'email'          => $bankcardModel['email'] ?? '',
+                    'bankname'       => $bankcardModel['bankname'] ?? ($data['bankname'] ?? ''),
+                    'bic'            => $bankcardModel['bic'] ?? '',
+                    'utr'            => '00000000',
+                    'req_info'       => '总后台结算',
+                    'req_ip'         => $this->request->ip(),
                 ];
-                $payModel = \app\common\model\Pay::create($payData);
+                $payModel = \app\common\model\RepaySettle::create($payData);
                 $userModel->setInc('withdrawal', $money);
                 \app\common\model\User::money(-$needMoney, $userModel->id, '提现：' . $money . '越南盾，手续费：' . $commission . '越南盾', $payModel['orderno'], '2');
                 \app\common\model\UserLog::addLog($merchantId, '管理员发起商户提现【' . $merchantId . '】【' . $money . '越南盾】手续费：' . $commission . '越南盾');

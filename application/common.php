@@ -4,6 +4,7 @@
 
 use think\exception\HttpResponseException;
 use think\Response;
+use fast\RedisLock;
 use google\GoogleAuthenticator;
 
 if (!function_exists('__')) {
@@ -267,6 +268,21 @@ if (!function_exists('addtion')) {
             }
         }
         return $items;
+    }
+}
+
+if (!function_exists('redisLocker')) {
+    /**
+     * Redis 分布式锁单例
+     * @return RedisLock
+     */
+    function redisLocker()
+    {
+        static $obj = null;
+        if (is_null($obj)) {
+            $obj = new RedisLock(config('redis.lock_server'));
+        }
+        return $obj;
     }
 }
 

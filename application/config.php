@@ -227,7 +227,32 @@ return [
         // 是否使用 setcookie
         'setcookie' => true,
     ],
-    //分页配置
+    // +----------------------------------------------------------------------
+    // | Redis 设置
+    // +----------------------------------------------------------------------
+    'redis' => [
+        'default' => [
+            'host'       => Env::get('redis.host', '127.0.0.1'),
+            'port'       => Env::get('redis.port', 6379),
+            'password'   => Env::get('redis.password', ''),
+            'select'     => Env::get('redis.select', 0),
+            'timeout'    => Env::get('redis.timeout', 0),
+            'persistent' => Env::get('redis.persistent', false),
+            'prefix'     => Env::get('redis.prefix', 'ep:'),
+        ],
+
+        'lock_server' => [
+            'host'       => Env::get('redis_lock.lock_host', '127.0.0.1'),
+            'port'       => Env::get('redis_lock.lock_port', 6379),
+            'password'   => Env::get('redis_lock.lock_password', 'qq123123'),
+            'select'     => Env::get('redis_lock.lock_db', 1),
+            'timeout'    => Env::get('redis_lock.lock_timeout', 0),
+            'persistent' => Env::get('redis_lock.lock_persistent', false),
+            'prefix'     => Env::get('redis_lock.lock_prefix', 'ep_lock:'),
+        ],
+    ],
+
+//分页配置
     'paginate'               => [
         'type'      => 'bootstrap',
         'var_page'  => 'page',

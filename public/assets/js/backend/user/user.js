@@ -115,6 +115,54 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
         },
         settlement: function () {
             Controller.api.bindevent();
+            var $form = $("#settlement-form");
+            if (!$form.length) {
+                return;
+            }
+            var $select = $form.find('select[name="bankcardId"]');
+            var $usdtFields = $form.find('.usdt-extra');
+            var $usdtInputs = $usdtFields.find('input');
+            var $moneyInput = $form.find('input[name="money"]');
+            var $rateInput = $form.find('input[name="usdt_rate"]');
+            var $usdtInput = $form.find('input[name="usdt_money"]');
+
+            var isUsdtSelected = function () {
+                var $selected = $select.find('option:selected');
+                var typeAttr = ($selected.attr('data-type') || $selected.data('type') || '').toString();
+                var type = typeAttr.replace(/\s+/g, '').toLowerCase();
+                return type === 'usdt';
+            };
+
+            var updateUsdtAmount = function () {
+                if (!isUsdtSelected()) {
+                    $usdtInput.val('');
+                    return;
+                }
+                var money = parseFloat($moneyInput.val());
+                var rate = parseFloat($rateInput.val());
+                if (!money || money <= 0 || !rate || rate <= 0 || !isFinite(money) || !isFinite(rate)) {
+                    $usdtInput.val('');
+                    return;
+                }
+                var result = (money / rate).toFixed(4);
+                $usdtInput.val(result);
+            };
+
+            var toggleUsdtFields = function () {
+                if (isUsdtSelected()) {
+                    $usdtFields.removeClass('hidden').show();
+                    $usdtInputs.prop('disabled', false);
+                    updateUsdtAmount();
+                } else {
+                    $usdtFields.addClass('hidden').hide();
+                    $usdtInputs.prop('disabled', true).val('');
+                }
+            };
+
+            $moneyInput.on('input change', updateUsdtAmount);
+            $rateInput.on('input change', updateUsdtAmount);
+            $select.on('changed.bs.select change', toggleUsdtFields);
+            toggleUsdtFields();
         },
         api: {
             bindevent: function () {
