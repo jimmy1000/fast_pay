@@ -69,21 +69,22 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', 'echarts-t
                                     name: 'notify',
                                     title: '重发通知',
                                     text: '重发通知',
-                                    classname: 'btn btn-xs btn-info btn-ajax',
+                                    classname: 'btn btn-xs btn-info btn-dialog',
                                     icon: 'fa fa-send',
-                                    url: 'order/order/notify',
+                                    url: function (row) {
+                                        return 'order/order/notify/id/' + row.id;
+                                    },
                                     visible: function(row) {
                                         // 只有支付成功的订单显示重发通知
                                         return row.status == '1' || row.status == '2';
                                     }
                                 },
                                 {
-                                    name: 'refund',
+                                    name: 'chargeback',
                                     title: '手动退单',
                                     text: '手动退单',
-                                    classname: 'btn btn-xs btn-warning btn-ajax',
+                                    classname: 'btn btn-xs btn-warning btn-chargeback',
                                     icon: 'fa fa-undo',
-                                    url: 'order/order/refund',
                                     visible: function(row) {
                                         // 只有支付成功的订单显示手动退单
                                         return row.status == '1' || row.status == '2';
@@ -93,12 +94,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', 'echarts-t
                                     name: 'repair',
                                     title: '手动补单',
                                     text: '手动补单',
-                                    classname: 'btn btn-xs btn-success btn-ajax',
+                                    classname: 'btn btn-xs btn-success btn-dialog',
                                     icon: 'fa fa-wrench',
-                                    url: 'order/order/repair',
+                                    url: function (row) {
+                                        return 'order/order/repair/ids/' + row.id;
+                                    },
                                     visible: function(row) {
                                         // 只有未支付的订单显示手动补单
-                                        return row.status == '0';
+                                        return row.status == '0' || row.status == '2';
                                     }
                                 }
                             ],
@@ -252,75 +255,73 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', 'echarts-t
                 getChartData();
             }, 1000 * 60 * 5);
         },
+        chargeback:function(){
+            Controller.api.bindevent();
+        },
+        repair:function(){
+            Controller.api.bindevent();
+        },
+        notify: function () {
+            Controller.api.bindevent();
+            // 绑定重发通知按钮事件
+            $(document).off('click.notify', '#notifyBtn').on('click.notify', '#notifyBtn', function () {
+                var id = $("#id").val();
+                if (!id) {
+                    Toastr.error('订单ID不能为空');
+                    return false;
+                }
+                var url = Fast.api.fixurl('order/order/notify/id/' + id);
+                Fast.api.ajax(url, function (data, ret) {
+                    // 在弹窗内显示成功提示
+                    if (ret && ret.code === 1) {
+                        Toastr.success(ret.msg || '手动通知成功');
+                    }
+                    // 刷新父页面表格
+                    parent.$(".btn-refresh").trigger("click");
+                    return false;
+                }, function (data, ret) {
+                    // 失败时显示错误提示（阻止默认错误提示，只显示自定义提示）
+                    var msg = (ret && ret.msg) ? ret.msg : '手动通知失败';
+                    Toastr.error(msg);
+                    return false; // 阻止默认错误提示
+                });
+            });
+        },
         api: {
             bindevent: function () {
                 Form.api.bindevent($("form[role=form]"));
             },
             events: {
                 operate: {
-                    'click .btn-notify': function (e, value, row, index) {
-                        e.stopPropagation();
-                        // 重发通知逻辑
-                        Layer.confirm('确认重发通知？', function(index) {
-                            $.ajax({
-                                url: 'order/order/notify',
-                                type: 'post',
-                                data: {ids: row.id},
-                                dataType: 'json',
-                                success: function(data) {
-                                    Layer.close(index);
-                                    if (data.code == 1) {
-                                        Toastr.success(data.msg);
-                                        table.bootstrapTable('refresh');
-                                    } else {
-                                        Toastr.error(data.msg);
-                                    }
-                                }
-                            });
-                        });
-                    },
-                    'click .btn-refund': function (e, value, row, index) {
+                    'click .btn-chargeback': function (e, value, row, index) {
                         e.stopPropagation();
                         // 手动退单逻辑
-                        Layer.confirm('确认手动退单？已成功的订单退单非常危险！', function(index) {
-                            $.ajax({
-                                url: 'order/order/refund',
-                                type: 'post',
-                                data: {ids: row.id},
-                                dataType: 'json',
-                                success: function(data) {
-                                    Layer.close(index);
-                                    if (data.code == 1) {
-                                        Toastr.success(data.msg);
-                                        table.bootstrapTable('refresh');
-                                    } else {
-                                        Toastr.error(data.msg);
-                                    }
+                        Layer.confirm('确认手动退单？已成功的订单退单非常危险！', function(confirmIndex) {
+                            Layer.close(confirmIndex);
+                            // 输入 Google MFA 验证码
+                            Layer.prompt({
+                                title: '请输入谷歌验证码',
+                                formType: 0,
+                                placeholder: '请输入谷歌验证码（未绑定可输入888888）'
+                            }, function (code, promptIndex) {
+                                Layer.close(promptIndex);
+                                if (!code) {
+                                    Toastr.error('请输入谷歌验证码');
+                                    return;
                                 }
+                                Fast.api.ajax({
+                                    url: 'order/order/chargeback',
+                                    data: {
+                                        id: row.id,
+                                        code: code
+                                    }
+                                }, function () {
+                                    // 刷新表格（和管理员解绑使用相同的方式）
+                                    $("#table").bootstrapTable('refresh');
+                                });
                             });
                         });
                     },
-                    'click .btn-repair': function (e, value, row, index) {
-                        e.stopPropagation();
-                        // 手动补单逻辑
-                        Layer.confirm('确认手动补单？', function(index) {
-                            $.ajax({
-                                url: 'order/order/repair',
-                                type: 'post',
-                                data: {ids: row.id},
-                                dataType: 'json',
-                                success: function(data) {
-                                    Layer.close(index);
-                                    if (data.code == 1) {
-                                        Toastr.success(data.msg);
-                                        table.bootstrapTable('refresh');
-                                    } else {
-                                        Toastr.error(data.msg);
-                                    }
-                                }
-                            });
-                        });
-                    }
                 }
             }
         }

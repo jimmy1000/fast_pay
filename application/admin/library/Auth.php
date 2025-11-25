@@ -52,7 +52,7 @@ class Auth extends \fast\Auth
             $this->setError('Please try again after 1 day');
             return false;
         }
-        if (!admin_google_verify($admin, $googlemfa)) {
+        if (!google_verify_code($admin, $googlemfa)) {
             $this->setError('googleMFA error Please try again');
             return false;
         }

@@ -25,6 +25,7 @@ class User extends Model
         'url',
     ];
 
+
     /**
      * 获取个人URL
      * @param string $value
@@ -151,6 +152,15 @@ class User extends Model
             }
         }
         return $level;
+    }
+    /**
+     * 代理收益
+     * @param $value
+     * @return mixed
+     */
+    public function getIfagentmoneyAttr($value)
+    {
+        return $value == '-1' ? config('site.ifagentmoney') : $value;
     }
 
     /**
@@ -313,6 +323,26 @@ class User extends Model
         $user->googlesecret = '';
         $user->googlebind = 0;
         return $user->save();
+    }
+
+    /**
+     * 获取代理的某个通道的费率
+     * @param $user_id
+     * @param $api_type_id
+     * @return bool
+     * @throws \think\exception\DbException
+     */
+    public static function getAgentRate($user_id, $api_type_id)
+    {
+        $userChannelModel = UserApichannel::get([
+            'user_id' => $user_id,
+            'api_type_id' => $api_type_id,
+        ]);
+        //代理必须要设置费率
+        if (is_null($userChannelModel) || $userChannelModel['rate'] <= 0) {
+            return false;
+        }
+        return $userChannelModel['rate'];
     }
 
 }

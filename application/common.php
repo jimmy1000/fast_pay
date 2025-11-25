@@ -5,6 +5,7 @@
 use think\exception\HttpResponseException;
 use think\Response;
 use fast\RedisLock;
+use fast\Rsa;
 use google\GoogleAuthenticator;
 
 if (!function_exists('__')) {
@@ -286,18 +287,47 @@ if (!function_exists('redisLocker')) {
     }
 }
 
-if (!function_exists('admin_google_verify')) {
+if (!function_exists('makeApiSign')) {
     /**
-     * 验证管理员谷歌验证码
+     * 生成API签名
      *
-     * @param \app\admin\model\Admin|array|null $admin 管理员模型或数组
+     * @param array  $data      待签名数据
+     * @param string $md5Key    商户md5key
+     * @param string $privateKey 平台私钥
+     * @return string
+     */
+    function makeApiSign(array $data, string $md5Key, string $privateKey = '')
+    {
+        ksort($data);
+        $arg = '';
+        foreach ($data as $key => $val) {
+            if ($val === '' || $val === null || $key === 'sign') {
+                continue;
+            }
+            $arg .= $key . '=' . $val . '&';
+        }
+        $arg .= 'key=' . $md5Key;
+        $sigData = strtoupper(md5($arg));
+        if ($privateKey === '') {
+            return $sigData;
+        }
+        $rsa = new Rsa('', $privateKey);
+        return $rsa->sign($sigData);
+    }
+}
+
+if (!function_exists('google_verify_code')) {
+    /**
+     * 验证谷歌验证码（管理员/商户通用）
+     *
+     * @param mixed  $userOrAdmin 模型或数组，需包含 googlebind、googlesecret
      * @param string $code 输入的谷歌验证码
      * @param string $defaultCode 未绑定时允许的默认验证码
      * @return bool
      */
-    function admin_google_verify($admin, $code, $defaultCode = '888888')
+    function google_verify_code($userOrAdmin, $code, $defaultCode = '888888')
     {
-        if (!$admin) {
+        if (!$userOrAdmin) {
             return false;
         }
         $code = trim((string)$code);
@@ -305,8 +335,8 @@ if (!function_exists('admin_google_verify')) {
             return false;
         }
         // 管理员绑定了谷歌验证时严格校验
-        if (!empty($admin->googlebind) && !empty($admin->googlesecret)) {
-            return GoogleAuthenticator::verifyCode($admin->googlesecret, $code);
+        if (!empty($userOrAdmin->googlebind) && !empty($userOrAdmin->googlesecret)) {
+            return GoogleAuthenticator::verifyCode($userOrAdmin->googlesecret, $code);
         }
         // 未绑定时使用默认验证码
         return $code === $defaultCode;

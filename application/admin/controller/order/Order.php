@@ -2,7 +2,11 @@
 
 namespace app\admin\controller\order;
 
+use app\admin\model\order\NotifyLog;
 use app\common\controller\Backend;
+use fast\Http;
+use think\Db;
+use think\Exception;
 
 /**
  * 订单管理
@@ -198,4 +202,210 @@ class Order extends Backend
         $this->success('获取成功。', null, $result);
     }
 
+    /**
+     * 手动通知
+     */
+    public function notify()
+    {
+        $id = $this->request->param('id/d', 0);
+        if ($id <= 0) {
+            $id = $this->request->param('ids/d', 0);
+        }
+        $data = ['id' => $id];
+        $rules = [
+            'id|编号' => 'require|number'
+        ];
+        $result = $this->validate($data, $rules);
+        if (true !== $result) {
+            $this->error($result);
+        }
+
+        $orderModel = $this->model->find($data['id']);
+        if (!$orderModel) {
+            $this->error('订单不存在');
+        }
+        if ((string)$orderModel->style === '1') {
+            $this->error('充值订单不发通知');
+        }
+
+        $postData = [
+            'merId'       => $orderModel->merchant_id,
+            'orderId'     => $orderModel->orderno,
+            'sysOrderId'  => $orderModel->sys_orderno,
+            'productInfo' => $orderModel->productInfo,
+            'haveMoney'   => $orderModel->have_money,
+            'orderAmt'    => $orderModel->total_money,
+            'status'      => $orderModel->status,
+            'utr'         => $orderModel->utr,
+        ];
+        // req_info 可能是数组也可能是 URL 查询字符串，需要统一解析成数组
+        $reqInfo = $orderModel->req_info;
+        if (is_string($reqInfo)) {
+            $tmp = [];
+            parse_str($reqInfo, $tmp);
+            $reqInfo = $tmp;
+        }
+        if (!empty($reqInfo['attch'])) {
+            $postData['attch'] = $reqInfo['attch'];
+        }
+
+        // 通过模型关联获取商户信息
+        $userModel = $orderModel->user;
+        if (!$userModel) {
+            $this->error('商户信息不存在');
+        }
+        $postData['sign'] = makeApiSign($postData, $userModel->md5key ?? '', config('site.private_key'));
+
+        if ($this->request->isPost()) {
+            $notifyUrl = $reqInfo['notifyUrl'] ?? '';
+            if (!$notifyUrl) {
+                $this->error('通知地址不存在');
+            }
+            $notifyResult = Http::post($notifyUrl, $postData);
+            Db::startTrans();
+            try {
+                NotifyLog::log($orderModel->id, $notifyUrl, $postData, $notifyResult);
+                $orderModel->notify_count = ($orderModel->notify_count ?? 0) + 1;
+                $orderModel->notify_status = $notifyResult === 'success' ? '1' : '2';
+                $orderModel->save();
+                Db::commit();
+            } catch (\Exception $e) {
+                Db::rollback();
+                $this->error($e->getMessage());
+            }
+            if ($notifyResult === 'success') {
+                $this->success('手动通知成功:' . $notifyResult);
+            }
+            $this->error('手动通知失败:' . $notifyResult);
+        }
+        $this->assign('order', $orderModel);
+        $this->assign('post_data', urldecode(http_build_query($postData)));
+        return $this->view->fetch();
+    }
+    /**
+     * 手动补单
+     * @return mixed
+     * @throws Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function repair()
+    {
+        $id = $this->request->param('id/d', 0);
+        if ($id <= 0) {
+            $id = $this->request->param('ids/d', 0);
+        }
+        $data = ['id' => $id];
+        $rules = [
+            'id|编号' => 'require|number'
+        ];
+
+        $result = $this->validate($data, $rules);
+        if (true !== $result) {
+            $this->error($result);
+        }
+
+        $orderModel = $this->model->find($data['id']);
+        if (!$orderModel) {
+            $this->error('订单不存在');
+        }
+
+        if ((string)$orderModel->status !== '0') {
+            $this->error('补单失败,该订单已成功！');
+        }
+
+        if ($this->request->isPost()) {
+            // 验证 Google MFA（替代安全码验证）
+            $code = $this->request->post('code', '');
+            if (empty($code)) {
+                $this->error('请输入谷歌验证码');
+            }
+            $admin = \app\admin\model\Admin::get($this->auth->id);
+            if (!google_verify_code($admin, $code)) {
+                $this->error(__('googleMFA error Please try again'));
+            }
+
+            // 同一时刻 同一用户只能处理一个
+            $redislock = redisLocker();
+            $resource = $redislock->lock('pay.' . $orderModel->merchant_id, 3000);   // 单位毫秒
+
+            if ($resource) {
+                try {
+                    // 更新订单状态
+                    $params = [
+                        'orderno' => $orderModel->sys_orderno,    // 系统订单号
+                        'up_orderno' => 'EP' . $orderModel->sys_orderno,   // 上游单号
+                        'amount' => $orderModel->total_money       // 金额
+                    ];
+                    $result = \app\admin\model\order\Order::orderFinish($params);
+                } catch (\Exception $e) {
+                    $redislock->unlock(['resource' => 'pay.' . $orderModel->merchant_id, 'token' => $resource['token']]);
+                    $this->error($e->getMessage());
+                } finally {
+                    $redislock->unlock(['resource' => 'pay.' . $orderModel->merchant_id, 'token' => $resource['token']]);
+                }
+            } else {
+                $this->error('系统处理订单繁忙，请重试');
+            }
+
+            if ($result[0] == 1) {
+                $this->success('补单成功！');
+            }
+            $this->error($result[1]);
+        }
+
+        $this->assign('order', $orderModel);
+        return $this->view->fetch();
+    }
+
+    /**
+     * .手动退单
+     * @return void
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function chargeback()
+    {
+
+
+        $data = $this->request->only('id');
+        $rules = [
+            'id|编号' => 'require|number'
+        ];
+
+        $result = $this->validate($data, $rules);
+        if (true !== $result) {
+            $this->error($result);
+        }
+
+        $orderModel = $this->model->find($data['id']);
+
+        if ($orderModel['status'] == '0') {
+            $this->error('退单失败,该订单未支付！');
+        }
+
+        //获取用户锁
+        $redislock = redisLocker();
+        $resource = $redislock->lock('pay.' . $orderModel['merchant_id'], 3000);   //单位毫秒
+        if ($resource) {
+            try {
+                \app\admin\model\order\Order::chargeback($orderModel->id);
+
+                $redislock->unlock(['resource' => 'pay.' . $orderModel['merchant_id'], 'token' => $resource['token']]);
+
+            } catch (\Exception $e) {
+
+                $redislock->unlock(['resource' => 'pay.' . $orderModel['merchant_id'], 'token' => $resource['token']]);
+
+                $this->error($e->getMessage());
+            }
+        } else {
+            $this->error('系统处理订单繁忙，请重试');
+        }
+
+        $this->success('退单成功');
+
+    }
 }

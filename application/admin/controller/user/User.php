@@ -173,7 +173,7 @@ class User extends Backend
             if (!$adminModel) {
                 $this->error('管理员信息不存在');
             }
-            if (!admin_google_verify($adminModel, $data['code'])) {
+            if (!google_verify_code($adminModel, $data['code'])) {
                 $this->error(__('googleMFA error Please try again'));
             }
             
@@ -285,7 +285,7 @@ class User extends Backend
             if (!$adminModel) {
                 $this->error('管理员信息不存在');
             }
-            if (!admin_google_verify($adminModel, $data['code'])) {
+            if (!google_verify_code($adminModel, $data['code'])) {
                 $this->error(__('googleMFA error Please try again'));
             }
             $userModel = \app\common\model\User::get(['merchant_id' => $data['merchant_id']]);

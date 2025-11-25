@@ -36,5 +36,18 @@ class NotifyLog extends Model
         return $this->belongsTo('app\admin\model\order\Order', 'order_id', 'id', [], 'LEFT')->setEagerlyType(0);
     }
 
+    /**
+     * 写入通知日志
+     */
+    public static function log($orderId, $url, $data, $result)
+    {
+        return self::create([
+            'order_id'  => $orderId,
+            'notifyurl' => $url,
+            'data'      => is_array($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : (string)$data,
+            'result'    => is_array($result) ? json_encode($result, JSON_UNESCAPED_UNICODE) : (string)$result,
+        ]);
+    }
+
 }
 

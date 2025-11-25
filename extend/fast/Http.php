@@ -13,12 +13,20 @@ class Http
      * @param string $url     请求URL
      * @param array  $params  请求参数
      * @param array  $options 扩展参数
-     * @return mixed|string
+     * @return mixed|string 成功返回服务器响应内容，失败返回错误信息
      */
     public static function post($url, $params = [], $options = [])
     {
         $req = self::sendRequest($url, $params, 'POST', $options);
-        return $req['ret'] ? $req['msg'] : '';
+        if ($req['ret']) {
+            // 请求成功，返回服务器响应内容
+            return $req['msg'];
+        } else {
+            // 请求失败，返回包含错误码和错误信息的字符串
+            $errorMsg = $req['msg'] ?? 'Request failed';
+            $errorCode = $req['errno'] ?? 0;
+            return "Error code:{$errorCode}, Error message:{$errorMsg}";
+        }
     }
 
     /**
