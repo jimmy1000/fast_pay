@@ -343,6 +343,18 @@ if (!function_exists('google_verify_code')) {
     }
 }
 
+if (!function_exists('create_orderno')) {
+    /**
+     * 生成系统订单号
+     *
+     * @return string
+     */
+    function create_orderno()
+    {
+        return \fast\Random::getOrderId();
+    }
+}
+
 if (!function_exists('var_export_short')) {
 
     /**
@@ -579,5 +591,24 @@ if (!function_exists('build_suffix_image')) {
         </svg>
 EOT;
         return $icon;
+    }
+}
+
+if (!function_exists('loadApi')) {
+    /**
+     * 实例化并缓存 API 类
+     *
+     * @param string $code API 类名后缀
+     * @return object
+     */
+    function loadApi($code)
+    {
+        static $apis = [];
+        $code = ucfirst($code);
+        if (empty($apis[$code])) {
+            $class = 'app\common\api\\' . $code;
+            $apis[$code] = new $class();
+        }
+        return $apis[$code];
     }
 }

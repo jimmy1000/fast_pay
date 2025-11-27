@@ -1,20 +1,13 @@
 <?php
 
 namespace app\admin\model\repay;
-
 use think\Model;
-
 
 class Order extends Model
 {
-
-    
-
-    
-
     // 表名
     protected $name = 'repay_order';
-    
+
     // 自动写入时间戳字段
     protected $autoWriteTimestamp = 'integer';
 
@@ -29,11 +22,9 @@ class Order extends Model
         'status_text',
         'daifustatus_text',
         'notify_status_text',
-        'paytime_text'
+        'paytime_text',
     ];
-    
 
-    
     public function getStyleList()
     {
         return ['0' => __('Style 0'), '1' => __('Style 1')];
@@ -54,14 +45,12 @@ class Order extends Model
         return ['0' => __('Notify_status 0'), '1' => __('Notify_status 1'), '2' => __('Notify_status 2')];
     }
 
-
     public function getStyleTextAttr($value, $data)
     {
         $value = $value ?: ($data['style'] ?? '');
         $list = $this->getStyleList();
         return $list[$value] ?? '';
     }
-
 
     public function getStatusTextAttr($value, $data)
     {
@@ -70,7 +59,6 @@ class Order extends Model
         return $list[$value] ?? '';
     }
 
-
     public function getDaifustatusTextAttr($value, $data)
     {
         $value = $value ?: ($data['daifustatus'] ?? '');
@@ -78,14 +66,12 @@ class Order extends Model
         return $list[$value] ?? '';
     }
 
-
     public function getNotifyStatusTextAttr($value, $data)
     {
         $value = $value ?: ($data['notify_status'] ?? '');
         $list = $this->getNotifyStatusList();
         return $list[$value] ?? '';
     }
-
 
     public function getPaytimeTextAttr($value, $data)
     {
@@ -98,5 +84,27 @@ class Order extends Model
         return $value === '' ? null : ($value && !is_numeric($value) ? strtotime($value) : $value);
     }
 
+    /**
+     * 解析 req_info 为数组
+     */
+    protected function getReqInfoAttr($value)
+    {
+        if (!$value) {
+            return [];
+        }
+        if (is_array($value)) {
+            return $value;
+        }
+        $req = [];
+        parse_str($value, $req);
+        return $req;
+    }
 
+    /**
+     * 关联商户
+     */
+    public function user()
+    {
+        return $this->belongsTo('app\common\model\User', 'merchant_id', 'merchant_id', [], 'LEFT')->setEagerlyType(0);
+    }
 }

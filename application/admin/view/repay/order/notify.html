@@ -1,0 +1,39 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            商户单号：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="orderno" value="{$pay.orderno}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            通知地址：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="notifyUrl" value="{$pay.req_info.notifyUrl}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            通知报文：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+           <textarea class="form-control" rows="12" disabled>{$post_data}</textarea>
+        </div>
+    </div>
+
+    <input type="hidden" name="id" id="id" value="{$pay.id}" />
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="button" class="btn btn-success btn-embossed" id="notifyBtn">点这里重发订单</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>
+

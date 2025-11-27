@@ -1,0 +1,77 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            商户号：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="merchant_id" value="{$pay.merchant_id}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            代付金额：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="money" value="{$pay.money}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            提现信息：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea type="text" class="form-control" disabled=''>开户名：{$pay.name} 邮箱：{$pay.email} 手机号：{$pay.phone} </textarea>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            状态：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="status" value="{$pay.status_text}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            代付状态：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="daifustatus" value="{$pay.daifustatus_text}" required  disabled/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-xs-12 col-sm-2">
+            申请时间：
+        </label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="createtime" value="{:date('Y-m-d H:i:s',$pay['createtime'])}" required  disabled/>
+        </div>
+    </div>
+
+    {if condition="($pay.daifustatus eq '0' or $pay.daifustatus eq '2' or $pay.daifustatus eq '4') and  ($pay.status eq '0') "}
+    <div class="form-group">
+        <label  class="control-label col-xs-12 col-sm-2">代付账户:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-daifuid" data-rule="required" data-source="api/account/repay" class="form-control selectpage" name="daifuid" type="text" value="{$daifuid}">
+        </div>
+    </div>
+    {/if}
+
+    <input type="hidden" name="id" value="{$pay.id}" />
+
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed disabled">确认无误后，点击提交代付</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+
+</form>
+

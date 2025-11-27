@@ -4,14 +4,8 @@ namespace app\admin\model\repay;
 
 use think\Model;
 
-
 class Notifylog extends Model
 {
-
-    
-
-    
-
     // 表名
     protected $name = 'repay_notifylog';
     
@@ -23,18 +17,23 @@ class Notifylog extends Model
     protected $updateTime = false;
     protected $deleteTime = false;
 
-    // 追加属性
-    protected $append = [
-
-    ];
-    
-
-    
-
-
-
-
-
-
-
+    /**
+     * 写通知日志
+     *
+     * @param int         $orderId
+     * @param string      $url
+     * @param array|string $data
+     * @param array|string $result
+     * @return static
+     */
+    public static function log($orderId, $url, $data, $result)
+    {
+        return self::create([
+            'order_id'  => $orderId,
+            'notifyurl' => $url,
+            'data'      => is_array($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : (string)$data,
+            'result'    => is_array($result) ? json_encode($result, JSON_UNESCAPED_UNICODE) : (string)$result,
+        ]);
+    }
 }
+

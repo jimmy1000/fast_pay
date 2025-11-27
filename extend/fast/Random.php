@@ -107,4 +107,13 @@ class Random
             mt_rand(0, 0xffff)
         );
     }
+    /**
+     * 获取订单号
+     * @param string $prefix
+     * @return string
+     */
+    public static function getOrderId()
+    {
+        return  (strtotime(date('YmdHis', time()))) . substr(microtime(), 2, 6) . sprintf('%03d', rand(0, 999));
+    }
 }
