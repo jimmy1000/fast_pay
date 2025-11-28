@@ -4,6 +4,7 @@ namespace app\admin\controller\repay;
 
 use app\admin\model\repay\Notifylog;
 use app\common\model\RepayOrder as RepayOrderModel;
+use app\common\model\RepayUporder;
 use app\common\controller\Backend;
 use app\common\model\User;
 use fast\Http;
@@ -177,13 +178,52 @@ class Order extends Backend
 
             $list = $this->model->where($this->model->getPk(), 'in', $ids)->where($where)->select();
             $count = 0;
+            
+            // 统一处理订单状态更新
             foreach ($list as $item) {
                 if ($values['status'] === '1') {
                     $values['paytime'] = time();
                     $values['msg'] = $values['msg'] ?? '手动处理成功';
                 }
+                if ($values['status'] === '3') {
+                    $values['daifustatus'] = '4';
+                    $values['msg'] = $values['msg'] ?? '订单已驳回取消';
+                }
                 $count += $item->allowField(true)->isUpdate(true)->save($values);
             }
+            
+            // 取消操作需要额外处理资金返还
+            if ($values['status'] === '3') {
+                // 按商户分组处理
+                $merchantGroups = [];
+                foreach ($list as $item) {
+                    $merchantGroups[$item['merchant_id']][] = $item;
+                }
+                
+                foreach ($merchantGroups as $merchantId => $orders) {
+                    $userModel = User::get(['merchant_id' => $merchantId]);
+                    if (!$userModel) continue;
+                    
+                    $redislock = redisLocker();
+                    $resource = $redislock->lock('repay.' . $merchantId, 3000);
+                    if (!$resource) {
+                        throw new Exception('系统处理订单繁忙，请重试');
+                    }
+                    
+                    try {
+                        foreach ($orders as $item) {
+                            $refundMoney = bcadd($item['money'], $item['charge'], 2);
+                            User::money($refundMoney, $userModel['id'], '提现取消返还金额：' . $refundMoney . '越南盾', $item['orderno'], '2');
+                            $userModel->setDec('withdrawal', $refundMoney);
+                        }
+                        $redislock->unlock(['resource' => 'repay.' . $merchantId, 'token' => $resource['token']]);
+                    } catch (\Exception $e) {
+                        $redislock->unlock(['resource' => 'repay.' . $merchantId, 'token' => $resource['token']]);
+                        throw $e;
+                    }
+                }
+            }
+            
             Db::commit();
 
             if ($count > 0) {
@@ -293,6 +333,11 @@ class Order extends Backend
 
         $this->assign('pay', $payModel->toArray());
         $this->assign('daifuid', $daifuid);
+        $records = RepayUporder::with(['account'])
+            ->where('pay_id', $payModel['id'])
+            ->order('id', 'desc')
+            ->select();
+        $this->assign('records', $records ? collection($records)->toArray() : []);
 
         return $this->fetch();
     }

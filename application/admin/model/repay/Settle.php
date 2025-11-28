@@ -36,22 +36,26 @@ class Settle extends Model
     
     public function getStyleList()
     {
-        return ['0' => __('Style 0'), '1' => __('Style 1')];
+        return ['0' => __('法币结算'), '1' => __('USDT下发')];
     }
 
     public function getApplyStyleList()
     {
-        return ['0' => __('Apply_style 0'), '1' => __('Apply_style 1')];
+        return ['0' => __('商户后台'), '1' => __('系统后台')];
     }
 
     public function getCaraddresstypeList()
     {
-        return ['TRC20' => __('TRC20'), 'ERC20' => __('ERC20'), '-' => __('-')];
+        return ['TRC20' => 'TRC20', 'ERC20' => 'ERC20', '-' => '-'];
     }
 
     public function getStatusList()
     {
-        return ['0' => __('Status 0'), '1' => __('Status 1'), '2' => __('Status 2')];
+        return [
+            '0' => __('审核中'),
+            '1' => __('已支付'),
+            '2' => __('取消'),
+        ];
     }
 
 

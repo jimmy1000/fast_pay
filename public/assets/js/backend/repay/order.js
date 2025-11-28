@@ -281,8 +281,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                 Layer.msg(data.msg, {
                     time: 3000
                 }, function () {
-                    window.location.reload()
-                })
+                    if (parent && parent.$("#table").length) {
+                        parent.$("#table").bootstrapTable('refresh');
+                    }
+                    window.location.reload();
+                });
                 return false;
             });
         },
