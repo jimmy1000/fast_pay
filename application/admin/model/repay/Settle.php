@@ -102,5 +102,4 @@ class Settle extends Model
         return $value === '' ? null : ($value && !is_numeric($value) ? strtotime($value) : $value);
     }
 
-
 }

@@ -35,5 +35,9 @@ class Notifylog extends Model
             'result'    => is_array($result) ? json_encode($result, JSON_UNESCAPED_UNICODE) : (string)$result,
         ]);
     }
+    public function repayorder()
+    {
+        return $this->belongsTo('app\admin\model\repay\Order', 'order_id', 'id', [], 'LEFT')->setEagerlyType(0);
+    }
 }
 

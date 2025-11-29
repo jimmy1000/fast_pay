@@ -26,7 +26,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     [
                         {checkbox: true},
                         {field: 'id', title: __('Id')},
-                        {field: 'order_id', title: __('Order_id')},
+                        {field: 'order_id', title: __('Order_id'), operate: false, formatter: function(value, row, index) {
+                            return row.repayorder && row.repayorder.orderno ? row.repayorder.orderno : (value || '-');
+                        }},
                         {field: 'notifyurl', title: __('Notifyurl'), operate: 'LIKE', formatter: Table.api.formatter.url},
                         {field: 'result', title: __('Result')},
                         {field: 'createtime', title: __('Createtime'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},

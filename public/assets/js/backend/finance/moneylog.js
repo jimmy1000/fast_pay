@@ -6,9 +6,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             Table.api.init({
                 extend: {
                     index_url: 'finance/moneylog/index' + location.search,
-                    add_url: 'finance/moneylog/add',
-                    edit_url: 'finance/moneylog/edit',
-                    del_url: 'finance/moneylog/del',
+                    add_url: '',
+                    edit_url: '',
+                    del_url: '',
                     multi_url: 'finance/moneylog/multi',
                     import_url: 'finance/moneylog/import',
                     table: 'user_money_log',
@@ -32,7 +32,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'after', title: __('After'), operate:'BETWEEN'},
                         {field: 'memo', title: __('Memo'), operate: 'LIKE', table: table, class: 'autocontent', formatter: Table.api.formatter.content},
                         {field: 'createtime', title: __('Createtime'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
-                        {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
+                        {field: 'operate', title: __('Operate'), table: table, formatter: function() { return ''; }}
                     ]
                 ]
             });
