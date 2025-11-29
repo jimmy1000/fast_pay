@@ -1,0 +1,57 @@
+<form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Pay_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-pay_id" data-rule="required" data-source="pay/index" class="form-control selectpage" name="row[pay_id]" type="text" value="{$row.pay_id|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Status')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            
+            <div class="radio">
+            {foreach name="statusList" item="vo"}
+            <label for="row[status]-{$key}"><input id="row[status]-{$key}" name="row[status]" type="radio" value="{$key}" {in name="key" value="$row.status"}checked{/in} /> {$vo}</label> 
+            {/foreach}
+            </div>
+
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Orderno')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-orderno" data-rule="required" class="form-control" name="row[orderno]" type="text" value="{$row.orderno|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Api_account_id')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-api_account_id" data-rule="required" data-source="api/account/index" class="form-control selectpage" name="row[api_account_id]" type="text" value="{$row.api_account_id|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Outorderno')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-outorderno" data-rule="required" class="form-control" name="row[outorderno]" type="text" value="{$row.outorderno|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Outdesc')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-outdesc" data-rule="required" class="form-control" name="row[outdesc]" type="text" value="{$row.outdesc|htmlentities}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('Paytime')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-paytime" data-rule="required" class="form-control datetimepicker" data-date-format="YYYY-MM-DD HH:mm:ss" data-use-current="true" name="row[paytime]" type="text" value="{:$row.paytime?datetime($row.paytime):''}">
+        </div>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+        </div>
+    </div>
+</form>

@@ -27,14 +27,13 @@ class Moneylog extends Model
     protected $append = [
 
     ];
-    
 
-    
-
-
-
-
-
+    /**
+     * @return \think\model\relation\BelongsTo 关联用户表
+     */
+    public function user(){
+        return $this->belongsTo('app\admin\model\User','user_id','id');
+    }
 
 
 }

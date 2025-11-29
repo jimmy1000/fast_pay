@@ -22,7 +22,41 @@ class Moneylog extends Backend
     {
         parent::_initialize();
         $this->model = new \app\admin\model\finance\Moneylog;
+        $this->relationSearch = true;
+    }
 
+    /**
+     * 查看
+     */
+    public function index()
+    {
+        //设置过滤方法
+        $this->request->filter(['strip_tags', 'trim']);
+        if (false === $this->request->isAjax()) {
+            return $this->view->fetch();
+        }
+        //如果发送的来源是 Selectpage，则转发到 Selectpage
+        if ($this->request->request('keyField')) {
+            return $this->selectpage();
+        }
+        [$where, $sort, $order, $offset, $limit] = $this->buildparams();
+        $list = $this->model
+            ->with(['user'])
+            ->where($where)
+            ->order($sort, $order)
+            ->paginate($limit);
+        
+        // 计算当前列表金额（根据筛选条件）
+        $listMoney = $this->model
+            ->with(['user'])
+            ->where($where)
+            ->sum('money');
+        
+        $result = ['total' => $list->total(), 'rows' => $list->items()];
+        $result['extend'] = [
+            'listMoney' => $listMoney ?: 0
+        ];
+        return json($result);
     }
 
 

@@ -107,4 +107,8 @@ class Order extends Model
     {
         return $this->belongsTo('app\common\model\User', 'merchant_id', 'merchant_id', [], 'LEFT')->setEagerlyType(0);
     }
+    public function uporder()
+    {
+        return $this->belongsTo('app\admin\model\repay\Uporder', 'id', 'pay_id', '', 'LEFT')->setEagerlyType(0);
+    }
 }

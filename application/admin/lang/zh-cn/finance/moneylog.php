@@ -1,7 +1,9 @@
 <?php
 
 return [
-    'User_id'    => '会员ID',
+    'User_id'    => '用户商户号',
+    'Username'   => '用户名',
+    'Order'      => '订单号',
     'Money'      => '变更余额',
     'Before'     => '变更前余额',
     'After'      => '变更后余额',

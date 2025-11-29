@@ -17,6 +17,21 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
 
             var table = $("#table");
 
+            //当表格数据加载完成时
+            table.on('load-success.bs.table', function (e, data) {
+                if (data.extend) {
+                    // 格式化数字，去掉小数点后的.00
+                    var formatMoney = function(value) {
+                        var num = parseFloat(value || 0);
+                        if (num % 1 === 0) {
+                            return num.toString();
+                        }
+                        return num.toFixed(2);
+                    };
+                    $("#listMoney").text('₫' + formatMoney(data.extend.listMoney));
+                }
+            });
+
             // 初始化表格
             table.bootstrapTable({
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
@@ -26,7 +41,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     [
                         {checkbox: true},
                         {field: 'id', title: __('Id')},
-                        {field: 'user_id', title: __('User_id')},
+                        {field: 'user_id', title: __('User_id'), operate: false, formatter: function(value, row, index) {
+                            return row.user && row.user.merchant_id ? row.user.merchant_id : (value || '-');
+                        }},
+                        {field: 'user.username', title: __('Username'), operate: 'LIKE'},
+                        {field: 'orderno', title: __('Order'), operate: 'LIKE'},
                         {field: 'money', title: __('Money'), operate:'BETWEEN'},
                         {field: 'before', title: __('Before'), operate:'BETWEEN'},
                         {field: 'after', title: __('After'), operate:'BETWEEN'},

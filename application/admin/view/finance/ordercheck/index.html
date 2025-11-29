@@ -1,0 +1,131 @@
+<div class="panel panel-default panel-intro">
+    {:build_heading()}
+    <div class="panel-body">
+        <!-- 统计卡片 -->
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-aqua">
+                    <div class="inner">
+                        <h3 id="allMoney">₫0</h3>
+                        <p>总金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-money"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">成功笔数: <span id="total">0</span></span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-light-blue">
+                    <div class="inner">
+                        <h3 id="haveMoney">₫0</h3>
+                        <p>用户金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">用户获得金额</span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-purple">
+                    <div class="inner">
+                        <h3 id="agentMoney">₫0</h3>
+                        <p>代理金额</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-percent"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">代理获得金额</span>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+                <!-- small box -->
+                <div class="small-box bg-teal">
+                    <div class="inner">
+                        <h3 id="profitMoney">₫0</h3>
+                        <p>平台盈利</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-line-chart"></i>
+                    </div>
+                    <span class="small-box-footer" style="background: rgba(0,0,0,0.1); padding: 5px; font-size: 11px;">已扣掉上游扣费: <span id="upstreamMoney">₫0</span></span>
+                </div>
+            </div>
+            <!-- ./col -->
+        </div>
+        <!-- /.row -->
+        <div id="myTabContent" class="tab-content">
+            <div class="tab-pane fade active in" id="one">
+                <div class="widget-body no-padding">
+                    <div id="toolbar" class="toolbar">
+                        <a href="javascript:;" class="btn btn-primary btn-refresh" title="{:__('Refresh')}"><i class="fa fa-refresh"></i> </a>
+                    </div>
+                    <table id="table" class="table table-striped table-bordered table-hover table-nowrap"
+                           data-operate-del="{:$auth->check('finance/ordercheck/del')}"
+                           width="100%">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="customformtpl" type="text/html">
+    <!--form表单必须添加form-commsearch这个类-->
+    <form action="" class="form-commonsearch">
+        <div style="border-radius:2px;margin-bottom:10px;background:#f5f5f5;padding:15px 20px;">
+            <h4>筛选条件</h4>
+            <hr>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">接口账户</label>
+                        <input class="operate" type="hidden" data-name="api_account_id" value="="/>
+                        <div>
+                            <input type="text" class="form-control selectpage" name="api_account_id" data-source="api/account/index" data-field="name" placeholder="请选择接口账户" value=""/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">商户号</label>
+                        <input class="operate" type="hidden" data-name="merchant_id" value="="/>
+                        <div>
+                            <input type="text" class="form-control" name="merchant_id" placeholder="请输入商户号" value=""/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">日期</label>
+                        <input type="hidden" class="operate" data-name="createtime" value="RANGE"/>
+                        <div>
+                            <input type="text" class="form-control datetimerange" name="createtime" value="" placeholder="添加时间" id="createtime" autocomplete="off" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <label class="control-label" style="visibility: hidden;">操作</label>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <button type="submit" class="btn btn-success" style="flex: 1; min-width: 90px; height: 34px; line-height: 1.42857143;">
+                                <i class="fa fa-search"></i> 查询
+                            </button>
+                            <button type="reset" class="btn btn-default" style="flex: 1; min-width: 90px; height: 34px; line-height: 1.42857143;">
+                                <i class="fa fa-refresh"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</script>
+

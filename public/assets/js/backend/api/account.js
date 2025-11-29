@@ -80,6 +80,42 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
             var layer_index = parent.Layer.getFrameIndex(window.name);
             layer_index && parent.Layer.full(layer_index);
         },
+        statistics: function () {
+            // 初始化表格参数配置
+            Table.api.init({
+                extend: {
+                    index_url: 'api/account/statistics',
+                    table: 'api_account',
+                }
+            });
+
+            var table = $("#table");
+
+            // 初始化表格
+            table.bootstrapTable({
+                url: $.fn.bootstrapTable.defaults.extend.index_url,
+                pk: 'id',
+                sortName: 'id',
+                search: false,
+                searchFormVisible: true,
+                searchFormTemplate: 'customformtpl',
+                columns: [
+                    [
+                        {field: 'id', title: '通道编号'},
+                        {field: 'name', title: '通道名称'},
+                        {field: 'allmoney', title: '总和交易金额', formatter: Table.api.formatter.amount},
+                        {field: 'successmoney', title: '成功交易金额', formatter: Table.api.formatter.amount},
+                        {field: 'allnum', title: '发起笔数'},
+                        {field: 'successnum', title: '成功笔数'},
+                        {field: 'usernum', title: '使用商户数'},
+                        {field: 'alllv', title: '成功转化率'},
+                    ]
+                ]
+            });
+
+            // 为表格绑定事件
+            Table.api.bindevent(table);
+        },
         events: {
             handler: {
                 //打开设置费率窗口

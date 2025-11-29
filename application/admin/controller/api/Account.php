@@ -3,8 +3,10 @@
 namespace app\admin\controller\api;
 
 use app\admin\model\api\Type as ApiType;
+use app\admin\model\ApiAccount;
 use app\common\controller\Backend;
 use app\common\model\api\Channel as ApiChannel;
+use app\common\model\Order;
 use think\Db;
 
 /**
@@ -239,6 +241,142 @@ class Account extends Backend
         }
         
         return json(['list' => $list, 'total' => $total]);
+    }
+
+    /**
+     * 统计
+     */
+    public function statistics()
+    {
+        $this->relationSearch = false;
+        //设置过滤方法
+        $this->request->filter(['strip_tags']);
+
+        if ($this->request->isAjax()) {
+            //如果发送的来源是Selectpage，则转发到Selectpage
+            if ($this->request->request('keyField')) {
+                return $this->selectpage();
+            }
+            list($where, $sort, $order, $offset, $limit) = $this->buildparams();
+
+            $result = [];
+            $allArray = [];
+
+            $list = Order::where($where)->field('api_account_id,sum(total_money) as `total_money`,count(id) as `count`,COUNT(DISTINCT(merchant_id)) as `merchant_id`, status')->group('api_account_id,status')->select();
+
+            if (count($list) <= 0) {
+                $result = [];
+                $total = 0;
+            } else {
+
+                foreach ($list as $i => $iList) {
+
+
+                    $apiAccountModel = ApiAccount::get($iList['api_account_id']);
+
+                    if (is_null($apiAccountModel)) {
+                        continue;
+                    }
+
+                    //接口名称 通道名称 总交易金额 成功交易金额 发起笔数 成功笔数 支付人数 转化率 扣量金额 扣量笔 转化率（扣） 扣率（按笔） 扣率（金额）
+                    $tmpallmoney = 0;
+                    $tmpsuccessmoney = 0;
+                    $tmpkoumoney = 0;
+                    $tmpallnum = 0;
+                    $tmpsuccessnum = 0;
+                    $tmpkounum = 0;
+                    $tmpusernum = 0;
+
+                    $tmpallmoney += $iList['total_money'];
+                    $tmpallnum += $iList['count'];
+
+                    switch ($iList['status']) {
+                        case '0':
+                            break;
+                        case '1':
+                            $tmpsuccessmoney += $iList['total_money'];
+                            $tmpsuccessnum += $iList['count'];
+                            $tmpusernum += $iList['merchant_id'];
+                            break;
+                        case 2:
+                            $tmpsuccessmoney += $iList['total_money'];
+                            $tmpsuccessnum += $iList['count'];
+                            $tmpkoumoney += $iList['total_money'];
+                            $tmpkounum += $iList['count'];
+                            $tmpusernum += $iList['merchant_id'];
+                            break;
+                    }
+                    $thisid = $iList['api_account_id'];
+
+                    //如果没有则初始化
+                    if (empty($allArray[$thisid])) {
+                        $allArray[$thisid] = array(
+                            'id' => $apiAccountModel['id'],
+                            'name' => $apiAccountModel['name'],
+                            'allmoney' => 0,
+                            'successmoney' => 0,
+                            'koumoney' => 0,
+                            'allnum' => 0,
+                            'successnum' => 0,
+                            'kounum' => 0,
+                            'usernum' => 0,
+                        );
+                    }
+                    //有了就累计
+                    $allArray[$thisid]['allmoney'] += $tmpallmoney;
+                    $allArray[$thisid]['successmoney'] += $tmpsuccessmoney;
+                    $allArray[$thisid]['koumoney'] += $tmpkoumoney;
+                    $allArray[$thisid]['allnum'] += $tmpallnum;
+                    $allArray[$thisid]['successnum'] += $tmpsuccessnum;
+                    $allArray[$thisid]['kounum'] += $tmpkounum;
+                    $allArray[$thisid]['usernum'] += $tmpusernum;
+                }
+
+                //计算概率
+                $result = array();
+                foreach ($allArray as $i => $iAllArray) {
+                    //时间 总和交易金额 成功交易金额 发起笔数 成功笔数  扣量金额 扣量笔 转化率 转化率（扣100%） 扣率（按笔0%） 扣率（金额1%）
+                    if ($iAllArray['allnum'] == 0) {
+                        $alllv = '-';
+                        $koulv = '-';
+                    } else {
+                        $alllv = number_format($iAllArray['successnum'] / $iAllArray['allnum'] * 100, 2, '.', '') . '%';
+                        $koulv = number_format($iAllArray['kounum'] / $iAllArray['allnum'] * 100, 2, '.', '') . '%';
+                    }
+                    if ($iAllArray['successnum'] == 0) {
+                        $kounumlv = '-';
+                        $koumoneylv = '-';
+                    } else {
+                        $kounumlv = number_format($iAllArray['kounum'] / $iAllArray['successnum'] * 100, 2, '.', '') . '%';
+                        $koumoneylv = number_format($iAllArray['koumoney'] / $iAllArray['successmoney'] * 100, 2, '.', '') . '%';
+                    }
+
+                    $result[] = array(
+                        'id' => $i,
+                        'name' => $iAllArray['name'],
+                        'allmoney' => $iAllArray['allmoney'],
+                        'successmoney' => $iAllArray['successmoney'],
+                        'koumoney' => $iAllArray['koumoney'],
+                        'allnum' => $iAllArray['allnum'],
+                        'successnum' => $iAllArray['successnum'],
+                        'kounum' => $iAllArray['kounum'],
+                        'alllv' => $alllv,
+                        'koulv' => $koulv,
+                        'kounumlv' => $kounumlv,
+                        'koumoneylv' => $koumoneylv,
+                        'usernum' => $iAllArray['usernum'],
+                    );
+                }
+                $total = count($result);
+            }
+
+            $result = array("total" => $total, "rows" => $result);
+
+            return json($result);
+        }
+
+
+        return $this->fetch();
     }
 
 }
