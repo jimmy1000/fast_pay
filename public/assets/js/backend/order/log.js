@@ -36,7 +36,22 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'channel', title: __('Channel'), operate: 'LIKE'},
                         {field: 'ip', title: __('Ip'), operate: 'LIKE'},
                         {field: 'createtime', title: __('Createtime'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
-                        {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
+                        {
+                            field: 'operate', 
+                            title: __('Operate'), 
+                            table: table, 
+                            events: Table.api.events.operate,
+                            buttons: [
+                                {
+                                    name: 'detail',
+                                    text: '请求详情',
+                                    icon: 'fa fa-list',
+                                    classname: 'btn btn-info btn-xs btn-detail btn-dialog',
+                                    url: 'order/log/detail'
+                                }
+                            ],
+                            formatter: Table.api.formatter.operate
+                        }
                     ]
                 ]
             });
