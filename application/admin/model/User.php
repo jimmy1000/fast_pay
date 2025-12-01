@@ -9,6 +9,7 @@ use fast\Random;
 use app\admin\model\user\Auth as UserAuth;
 use app\admin\model\user\Log as UserLog;
 use app\admin\model\mq\Order;
+use app\admin\model\ApiAccount;
 
 class User extends Model
 {
@@ -146,6 +147,14 @@ class User extends Model
     public function group()
     {
         return $this->belongsTo('UserGroup', 'group_id', 'id', [], 'LEFT')->setEagerlyType(0);
+    }
+
+    /**
+     * 关联代付账户（用于会员代付设置）
+     */
+    public function account()
+    {
+        return $this->belongsTo(ApiAccount::class, 'daifuid', 'id', [], 'LEFT')->setEagerlyType(0);
     }
 
     /**

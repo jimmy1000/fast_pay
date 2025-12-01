@@ -242,6 +242,17 @@ class Account extends Backend
         
         return json(['list' => $list, 'total' => $total]);
     }
+    /**
+     *
+     * 调用接口
+     * **/
+    public function items()
+    {
+        $list = collection(ApiAccount::all())->toArray();
+
+        return json($list);
+    }
+
 
     /**
      * 统计

@@ -1,0 +1,72 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <div class="alert alert-info">您正在设置:商户【{$user['merchant_id']}】的通道以及费率。
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <table class="table-bordered table text-center">
+            <tr>
+                <th>接口名称</th>
+                <th>费率(0代表使用系统默认的费率)</th>
+                <th>接口规则</th>
+                <th>是否开启</th>
+            </tr>
+            {foreach name="api_type_list" item="type" key="key"}
+            {if condition="empty($user_channel_list[$key])"}
+            <tr>
+                <td>{$type.name}<input type="hidden" name="row[types][]" value="{$key}"></td>
+                <td>
+                    <input name="row[{$key}][rate]" type="text" value="0" class="form-control"/>
+                </td>
+                <td>
+                    <select class="form-control" name="row[{$key}][rule]">
+                        <option value="0">系统默认规则</option>
+                        {foreach name="type.rule_list" item="rule" key="k"}
+                            <option value="{$rule.id}">{$rule.name}</option>
+                        {/foreach}
+                    </select>
+                </td>
+                <td>
+                    <input type="hidden" name="row[{$key}][status]" id="c-switch-{$key}" value="{$type['default']}"/>
+                    <a href="javascript:;" data-toggle="switcher" class="btn-switcher" data-input-id="c-switch-{$key}" data-yes="1" data-no="0">
+                        <i class="fa fa-toggle-on text-success {if condition="$type['default'] == '0'"} fa-flip-horizontal text-gray{/if} fa-2x"></i>
+                    </a>
+                </td>
+            </tr>
+            {else}
+            <tr>
+                <td>{$type.name}<input type="hidden" name="row[types][]" value="{$key}"></td>
+                <td>
+                    <input name="row[{$key}][rate]" type="text" value="{$user_channel_list[$key]['rate']}" class="form-control"/>
+                </td>
+                <td>
+                    <select class="form-control" name="row[{$key}][rule]">
+                        <option value="0" {if condition="$user_channel_list[$key]['api_rule_id'] == '0' || $user_channel_list[$key]['api_rule_id'] == 0"}selected{/if}>系统默认规则</option>
+                        {foreach name="type.rule_list" item="rule" key="k"}
+                        <option value="{$rule.id}" {if condition="$user_channel_list[$key]['api_rule_id'] == $rule['id']"}selected{/if}>{$rule.name}</option>
+                        {/foreach}
+                    </select>
+                </td>
+                <td>
+                    <input type="hidden" name="row[{$key}][status]" id="c-switch-{$key}" value="{$user_channel_list[$key]['status']}"/>
+                    <a href="javascript:;" data-toggle="switcher" class="btn-switcher" data-input-id="c-switch-{$key}" data-yes="1" data-no="0">
+                        <i class="fa fa-toggle-on text-success {if condition="$user_channel_list[$key]['status'] == '0'"} fa-flip-horizontal text-gray{/if} fa-2x"></i>
+                    </a>
+                </td>
+            </tr>
+            {/if}
+            {/foreach}
+        </table>
+    </div>
+    
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="hidden" name="row[id]" value="{$user.id}">
+            <button type="submit" class="btn btn-success btn-embossed disabled">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>

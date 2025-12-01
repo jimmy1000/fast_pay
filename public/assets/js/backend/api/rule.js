@@ -25,11 +25,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                 var html = [];
                 html.push('<table class="table table-bordered table-hover" style="margin:0;width:100%;table-layout:fixed;">');
                 html.push('<colgroup>');
-                for (var i = 0; i < 5; i++) html.push('<col style="width:20%">');
+                // 4 列：序号、接口账号名称、权重、说明
+                for (var i = 0; i < 4; i++) html.push('<col style="width:25%">');
                 html.push('</colgroup>');
                 html.push('<thead><tr>');
                 html.push('<th style="width:80px;text-align:left;">序号</th>');
-                html.push('<th style="text-align:left;">接口账号ID</th>');
+                // 不再显示接口账号ID这一列
                 html.push('<th style="text-align:left;">接口账号名称</th>');
                 html.push('<th style="width:100px;text-align:left;">权重</th>');
                 html.push('<th style="text-align:left;">说明</th>');
@@ -39,7 +40,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     var desc = it.weight > 1 ? '权重越大，被选中的几率越高' : '默认权重';
                     html.push('<tr>');
                     html.push('<td style="text-align:left;">' + (j + 1) + '</td>');
-                    html.push('<td style="text-align:left;">' + it.id + '</td>');
                     html.push('<td style="text-align:left;"><strong>' + it.name + '</strong></td>');
                     html.push('<td style="text-align:left;"><span class="label label-primary">' + it.weight + '</span></td>');
                     html.push('<td class="text-muted" style="text-align:left;"><small>' + desc + '</small></td>');

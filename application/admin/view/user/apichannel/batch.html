@@ -1,0 +1,71 @@
+<form class="form-horizontal" role="form" method="post">
+
+    <div class="form-group">
+        <div class="alert alert-info">
+            您正在为以下商户批量设置通道费率：
+            <br>
+            {foreach name="users" item="user"}
+            <span class="label label-success" style="margin:3px;">
+           {$user.merchant_id} | {$user.username}
+            </span>
+            {/foreach}
+        </div>
+    </div>
+    
+    <!-- 隐藏的 user_ids -->
+    {foreach name="users" item="user"}
+    <input type="hidden" name="row[user_ids][]" value="{$user.id}">
+    {/foreach}
+    
+    <div class="form-group">
+        <table class="table table-bordered table-striped text-center">
+            <thead>
+            <tr>
+                <th class="text-center">接口名称</th>
+                <th class="text-center">费率 (留空=不修改,0为系统默认)</th>
+                <th class="text-center">状态</th>
+                <th class="text-center">接口规则</th>
+            </tr>
+            </thead>
+            <tbody>
+            {foreach name="api_type_list" item="type" key="key"}
+            <tr>
+                <td>
+                    {$type.name}
+                    <input type="hidden" name="row[types][]" value="{$key}">
+                </td>
+                <td>
+                    <input name="row[{$key}][rate]" type="text" value=""
+                           placeholder="不修改" class="form-control"/>
+                </td>
+                <td>
+                    <select class="form-control" name="row[{$key}][status]">
+                        <option value="">不修改</option>
+                        <option value="1">开启</option>
+                        <option value="0">关闭</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" name="row[{$key}][rule]">
+                        <option value="">不修改</option>
+                        <option value="0">系统默认规则</option>
+                        {foreach name="type.rule_list" item="rule"}
+                        <option value="{$rule.id}">{$rule.name}</option>
+                        {/foreach}
+                    </select>
+                </td>
+            </tr>
+            {/foreach}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>
+

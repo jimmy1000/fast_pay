@@ -1,0 +1,53 @@
+<form method="post" role="form" class="form-horizontal">
+
+    <input type="hidden" name="ids" value="{$ids}">
+
+    <!-- 代付账户 -->
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">代付账户:</label>
+        <div class="col-xs-12 col-sm-8">
+            <select name="daifuid" class="form-control">
+                <option value="">不更改</option>
+                {volist name="apilist" id="row"}
+                <option value="{$row.id}">{$row.name}</option>
+                {/volist}
+            </select>
+        </div>
+    </div>
+
+    <!-- 自动代付状态 -->
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">自动代付:</label>
+        <div class="col-xs-12 col-sm-8">
+            <div class="radio">
+                <label><input type="radio" name="ifdaifuauto" value="" checked> 不更改</label>
+                <label><input type="radio" name="ifdaifuauto" value="1"> 是</label>
+                <label><input type="radio" name="ifdaifuauto" value="0"> 否</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 费率(%) -->
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">费率(%):</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="payrate_percent" placeholder="不更改请留空">
+        </div>
+    </div>
+
+    <!-- 单笔费用 -->
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">单笔费用:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input type="text" class="form-control" name="payrate_each" placeholder="不更改请留空，填 -1 表示系统默认">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-xs-12 col-sm-offset-2 col-sm-8">
+            <button type="submit" class="btn btn-success">提交</button>
+        </div>
+    </div>
+</form>
+
+
