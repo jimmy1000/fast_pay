@@ -163,6 +163,73 @@ class Http
     }
 
     /**
+     * 发送 JSON 格式的 POST 请求
+     * @param string $url           请求URL
+     * @param array  $data          要发送的数据（会自动转为 JSON）
+     * @param array  $headers_request 额外的请求头（键值对数组，如 ['Authorization' => 'Bearer xxx']）
+     * @return string|false 成功返回响应内容，失败返回 false 或错误信息
+     */
+    public static function send_json($url, $data, $headers_request = [])
+    {
+        // 将数据转换为 JSON 格式
+        $json_data = json_encode($data, JSON_UNESCAPED_UNICODE);
+        
+        // 设置 cURL 请求
+        $ch = curl_init($url);
+        
+        // 默认的 headers
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($json_data),
+        ];
+        
+        // 如果 $headers_request 包含额外的 headers，将它们合并到默认 headers 中
+        if (!empty($headers_request) && is_array($headers_request)) {
+            foreach ($headers_request as $key => $value) {
+                // 如果已经是完整格式（如 'Authorization: Bearer xxx'），直接添加
+                if (is_numeric($key) && strpos($value, ':') !== false) {
+                    $headers[] = $value;
+                } else {
+                    // 否则格式化为 'Key: Value' 格式
+                    $headers[] = "$key: $value";
+                }
+            }
+        }
+        
+        // 设置 cURL 选项
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // HTTPS 相关设置
+        $protocol = substr($url, 0, 5);
+        if ('https' == $protocol) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        // 执行请求并获取响应
+        $response = curl_exec($ch);
+        
+        // 检查是否有错误发生
+        if ($response === false) {
+            $error = curl_error($ch);
+            $errno = curl_errno($ch);
+            curl_close($ch);
+            return "Error code:{$errno}, Error message:{$error}";
+        }
+        
+        // 关闭 cURL 资源
+        curl_close($ch);
+        
+        // 返回响应
+        return $response;
+    }
+
+    /**
      * 发送文件到客户端
      * @param string $file
      * @param bool   $delaftersend

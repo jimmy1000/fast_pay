@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>
+<html class="lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class=""> <!--<![endif]-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="renderer" content="webkit">
+    <title>Thanh toán ngay</title>
+
+    <link rel="stylesheet" media="screen" href="__CDN__/assets/addons/mq/css/pay.css"/>
+    <link rel="stylesheet" media="screen" href="__CDN__/assets/libs/font-awesome/css/font-awesome.min.css?v=?v=1.0.38"/>
+    <link rel="stylesheet" media="screen" href="__CDN__/assets/libs/fastadmin-layer/dist/theme/default/layer.css?v=1.0.38"/>
+
+    <!--[if lt IE 9]>
+    <script src="__CDN__/libs/html5shiv.js?v=?v=1.0.38"></script>
+    <script src="__CDN__/libs/respond.min.js?v=?v=1.0.38"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="container" style="position:relative;">
+    <div class="header">
+        <div class="logo {$type}"></div>
+    </div>
+    <div class="mainbody">
+        <div class="realprice">₫{$realprice}</div>
+        <div class="warning ">
+            Sau khi quét mã, vui lòng nhập đúng số tiền (₫{$realprice}), nếu sai sẽ không nhận được tiền.
+        </div>
+
+        <div class="qrcode">
+            <img class="image" src="{$qrcode}" alt="">
+            <!--            <div class="logo hidden-xs logo-VietQR"></div>-->
+            <div class="expired hidden"></div>
+            <div class="paid hidden"></div>
+        </div>
+        <div class="remainseconds">
+            <div class="time minutes">
+                <b>05</b>
+                <em>Phút</em>
+            </div>
+            <div class="colon">:</div>
+            <div class="time seconds">
+                <b>00</b>
+                <em>Giây</em>
+            </div>
+        </div>
+
+        <div class="help">
+            Nếu có bất kỳ thắc mắc nào về thanh toán, vui lòng liên hệ bộ phận chăm sóc khách hàng.
+            <br />Mã đơn hàng: {$orderno}<br />
+        </div>
+
+        <div class="tips">
+            Mở ứng dụng <strong>VietQR</strong> hoặc ngân hàng, chọn “Quét mã QR” để thực hiện thanh toán.
+        </div>
+    </div>
+
+    <div class="hongbao-bg"></div>
+
+    <script>
+        var order = {:json_encode($order)};
+        var addon = {
+            successtips: "Thanh toán thành công! Vui lòng đóng cửa sổ này để tiếp tục!",
+            expiretips: "Mã QR đã hết hạn, vui lòng nhấp để làm mới và thử lại!",
+            jumptips: "Thanh toán thành công! Tự động chuyển hướng sau 2 giây!"
+        }
+    </script>
+    <script type="text/javascript" src="__CDN__/assets/libs/jquery/dist/jquery.min.js?v=1.0.38"></script>
+    <script type="text/javascript" src="__CDN__/assets/libs/fastadmin-layer/dist/layer.js?v=1.0.38"></script>
+    <script type="text/javascript" src="__CDN__/assets/addons/mq/js/pay.js?v=1.0.38"></script>
+    <script>
+        $(function(){
+            $(document).on("click",".hongbao > a", function(){
+                $(".hongbao-mask,.hongbao-bg").show();
+            });
+            $(document).on("click",".hongbao-mask,.hongbao-bg", function(){
+                $(".hongbao-mask,.hongbao-bg").hide();
+            });
+        });
+    </script>
+</div>
+<div class="hongbao-mask"></div>
+</body>
+</html>

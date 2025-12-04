@@ -48,7 +48,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                 columns: [
                     [
                         {checkbox: true},
-                        {field: 'id', title: __('Id'), visible: false},
+                        {field: 'id', title: __('Id')},
                         {field: 'merchant_id', title: __('Merchant_id')},
                         {field: 'orderno', title: __('Orderno'), operate: 'LIKE'},
                         {
@@ -64,7 +64,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'phone', title: __('Phone')},
                         {field: 'email', title: __('Email')},
                         {field: 'charge', title: __('Charge'), operate:'BETWEEN'},
-                        {field: 'utr', title: __('Utr')},
                         {
                             field: 'status',
                             title: __('Status'),
@@ -74,6 +73,17 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                 "2": __('Status 2'),
                                 "3": __('Status 3'),
                                 "4": __('Status 4'),
+                            },
+                            formatter: Table.api.formatter.status
+                        },
+                        {field: 'notify_count', title: __('Notify_count')},
+                        {
+                            field: 'notify_status',
+                            title: __('Notify_status'),
+                            searchList: {
+                                "0": __('Notify_status 0'),
+                                "1": __('Notify_status 1'),
+                                "2": __('Notify_status 2')
                             },
                             formatter: Table.api.formatter.status
                         },
@@ -89,19 +99,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                             },
                             formatter: Table.api.formatter.status
                         },
-                        {field: 'notify_count', title: __('Notify_count')},
-                        {
-                            field: 'notify_status',
-                            title: __('Notify_status'),
-                            searchList: {
-                                "0": __('Notify_status 0'),
-                                "1": __('Notify_status 1'),
-                                "2": __('Notify_status 2')
-                            },
-                            formatter: Table.api.formatter.status
-                        },
                         {field: 'upcharge', title: __('UpCharge'), operate: 'BETWEEN'},
                         {field: 'req_ip', title: __('Req_ip')},
+                        {field: 'utr', title: __('Utr')},
                         {
                             field: 'createtime',
                             title: __('Createtime'),

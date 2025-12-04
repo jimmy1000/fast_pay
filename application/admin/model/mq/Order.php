@@ -56,7 +56,7 @@ class Order extends Model
     }
     public function account()
     {
-        return $this->belongsTo('Account', 'account_id', 'id');
+        return $this->belongsTo('Account', 'mq_account_id', 'id');
     }
 
 

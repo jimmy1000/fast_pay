@@ -29,14 +29,29 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {checkbox: true},
                         {field: 'id', title: __('Id')},
                         {field: 'merchant_id', title: __('Merchant_id')},
-                        {field: 'http', title: __('Http'), operate: 'LIKE', table: table, class: 'autocontent', formatter: Table.api.formatter.content},
+                        {field: 'result', title: __('Result'), operate: 'LIKE', table: table, class: 'autocontent', formatter: Table.api.formatter.content},
                         {field: 'status', title: __('Status'), searchList: {"0":__('Status 0'),"1":__('Status 1')}, formatter: Table.api.formatter.status},
                         {field: 'orderno', title: __('Orderno'), operate: 'LIKE'},
                         {field: 'total_money', title: __('Total_money'), operate:'BETWEEN'},
                         {field: 'channel', title: __('Channel'), operate: 'LIKE'},
                         {field: 'ip', title: __('Ip'), operate: 'LIKE'},
                         {field: 'createtime', title: __('Createtime'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
-                        {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
+                        {
+                            field: 'operate',
+                            title: __('Operate'),
+                            table: table,
+                            events: Table.api.events.operate,
+                            buttons: [
+                                {
+                                    name: 'detail',
+                                    text: '请求详情',
+                                    icon: 'fa fa-list',
+                                    classname: 'btn btn-info btn-xs btn-detail btn-dialog',
+                                    url: 'repay/log/detail'
+                                }
+                            ],
+                            formatter: Table.api.formatter.operate
+                        }
                     ]
                 ]
             });

@@ -15,8 +15,20 @@ class Log extends Addons
     public function appInit(&$params)
     {
         $logConfig = get_addon_config('log');
-        $level = explode(',', $logConfig['level']);
-        config('log.level', $level);
+        $pluginLevel = explode(',', $logConfig['level']);
+        
+        // 获取 config.php 里已有的 level 和 apart_level（可能包含自定义级别如 PAY_API）
+        $existingLevel = config('log.level') ?: [];
+        $apartLevel = config('log.apart_level') ?: [];
+        
+        // 合并插件配置的级别和 config.php 里的自定义级别
+        $mergedLevel = array_unique(array_merge($existingLevel, $pluginLevel));
+        
+        // 设置合并后的 level，保留 apart_level（支持自定义级别）
+        config('log.level', $mergedLevel);
+        if (!empty($apartLevel)) {
+            config('log.apart_level', $apartLevel);
+        }
     }
 
     /**

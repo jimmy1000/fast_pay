@@ -167,7 +167,7 @@ class Rsa
     {
         $this->setupPubKey();
         $signature = base64_decode($signString);
-        $flg = openssl_verify($dataString, $signature, $this->_pubKey);
+        $flg = openssl_verify($dataString, $signature, $this->_pubKey,OPENSSL_ALGO_SHA256);
         return $flg;
     }
 

@@ -316,6 +316,35 @@ if (!function_exists('makeApiSign')) {
     }
 }
 
+if (!function_exists('verifyApiSign')) {
+    /**
+     * 验证 API 签名
+     *
+     * @param array  $data   接收的参数数组（包含 sign）
+     * @param string $md5Key 商户 md5key
+     * @param string $pubKey 平台公钥
+     * @return bool|number
+     */
+    function verifyApiSign(array $data, string $md5Key, string $pubKey)
+    {
+        // 排序并拼接参数
+        ksort($data);
+        $arg = '';
+        foreach ($data as $key => $val) {
+            // 空值和 sign 字段不参与签名
+            if ($val === '' || $val === null || $key === 'sign') {
+                continue;
+            }
+            $arg .= $key . '=' . $val . '&';
+        }
+        $arg .= 'key=' . $md5Key;
+        $signData = strtoupper(md5($arg));
+        // 创建 Rsa 对象并加载公钥，验证签名
+        $rsa = new Rsa($pubKey, '');
+        return $rsa->verify($signData, $data['sign'] ?? '');
+    }
+}
+
 if (!function_exists('google_verify_code')) {
     /**
      * 验证谷歌验证码（管理员/商户通用）
@@ -352,6 +381,47 @@ if (!function_exists('create_orderno')) {
     function create_orderno()
     {
         return \fast\Random::getOrderId();
+    }
+}
+
+if (!function_exists('checkRepayTime')) {
+    /**
+     * 检查提现时间是否在允许区间
+     *
+     * 使用配置：site.txpaytimestart / site.txpaytimeend（格式如 09:00、23:30）
+     *
+     * @return bool 在时间范围内返回 true，否则返回 false
+     */
+    function checkRepayTime(): bool
+    {
+        $now = (int)date('Hi');
+        $start = (int)str_replace(':', '', config('site.txpaytimestart'));
+        $end = (int)str_replace(':', '', config('site.txpaytimeend'));
+
+        if ($now >= $start && $now <= $end) {
+            return true;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('checkApiDomain')) {
+    /**
+     * 检查接口域名
+     *
+     * @param string $domain  当前请求域名（如 http://fast_pay.com）
+     * @param string $gateway 配置中的网关地址（如 http://fast_pay.com/api）
+     * @return bool
+     */
+    function checkApiDomain(string $domain, string $gateway): bool
+    {
+        $urlInfo = parse_url($gateway);
+        if (!$urlInfo || empty($urlInfo['scheme']) || empty($urlInfo['host'])) {
+            return false;
+        }
+        $gatewayBase = $urlInfo['scheme'] . '://' . $urlInfo['host'];
+        // 不区分大小写比较
+        return strcasecmp($domain, $gatewayBase) === 0;
     }
 }
 

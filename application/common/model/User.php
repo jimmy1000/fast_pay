@@ -344,5 +344,84 @@ class User extends Model
         }
         return $userChannelModel['rate'];
     }
+    /**
+     * 获取用户可用的接口以及费率
+     * 以接口类型为key
+     */
+    public function getApiList2($money=0)
+    {
+
+        $user_id = $this->getAttr('id');
+        //获取系统的所有开启的通道
+        $api_type_list = ApiType::getOpenList();
+        //获取用户的接口规则
+        $api_user_channels = UserApichannel::getListByUser($user_id);
+        $result = [];   //结果数组
+        foreach ($api_type_list as $type) {
+            $type_id = $type['id'];
+            $rule_id = $type['api_rule_id'];
+            $rate_flag = false;
+            $user_rate = 0;
+
+            //如果用户拥有默认的规则
+            if (!empty($api_user_channels[$type_id])) {
+                $rule_id = $api_user_channels[$type_id]['api_rule_id'] == 0 ? $rule_id : $api_user_channels[$type_id]['api_rule_id'];
+                $rate_flag = $api_user_channels[$type_id]['rate'] > 0 ? true : false;
+                //如果通道关闭了
+                if ($api_user_channels[$type_id]['status'] == 0) {
+                    continue;
+                }
+            }
+            //没有设置规则的情况下
+            if ($rule_id == 0) {
+                continue;
+            }
+
+            //轮询规则自动失效限额的接口
+            $channel_info = ApiRule::getChannelInfo($rule_id, false,true,$money);
+
+            //没有设置的规则的时候不可用
+            if(empty($channel_info)){
+                continue;
+            }
+
+
+            //如果用户自定义了费率
+            if ($rate_flag) {
+                $user_rate = $api_user_channels[$type_id]['rate'];
+            }
+            $type_text = '';
+            switch ($channel_info['info']['type']) {
+                case '0':
+                    $type_text = '单通道模式';
+                    break;
+                case '1':
+                    $type_text = '顺序轮询';
+                    break;
+                case '2':
+                    $type_text = '随机轮询';
+                    break;
+            }
+            //封装结果
+            $result[$type['code']] = [
+                'id' => $type['id'],
+                'name' => $type['name'],  //接口名称
+                'code' => $type['code'],  //调用代码
+                'domain' => $type['domain'],  //接口域名
+                'account_id' => $channel_info['info']['api_account_ids']['id'],
+                'account_weight' => $channel_info['info']['api_account_ids']['weight'],
+                'rule_type' => $channel_info['info']['type'], //规则
+                'rule_type_text' => $type_text,
+                'rate' => $channel_info['rate_list'], //费率数组
+                'user_rate' => $user_rate,
+                'money_range' => implode(',', $channel_info['money_range_list']),   //充值范围
+                'total' => $channel_info['total'],    //每天额度
+                'has' => $channel_info['has']         //已用额度
+            ];
+
+        }
+        return $result;
+
+    }
 
 }

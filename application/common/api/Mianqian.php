@@ -13,7 +13,6 @@ class Mianqian extends Base
 
     public function pay($params)
     {
-        //$type = ($params['channel'] == 'zfbewm' || $params['channel'] == '101') ? 'alipay' : 'wechat';
         $channel = $params['channel'];
         try {
 
@@ -39,7 +38,6 @@ class Mianqian extends Base
         $channel = $_REQUEST['channel'];
         $sign = $_REQUEST['sign'];
         $utr = $_REQUEST['utr'];
-        //   $r = $_REQUEST['r'];
         $addon_config = get_addon_config('mq');
         $key = $addon_config['secretkey'];
         //验证签名
@@ -57,7 +55,7 @@ class Mianqian extends Base
         //找到是否有这个订单
         $orderNo = Mq::findOrderno($price,$channel);
         if(!$orderNo){
-            Log::write('警告：收到订单外的收款信息，收到来自' .$channel . '金额' .$price . '但不是收款系统订单中的付款信息!','CHANNEL');
+            Log::write('警告：收到订单外的收款信息，收到来自' .$channel . '金额' .$price . '但不是收款系统订单中的付款信息!','PAY_CHANNEL');
             $data = [
                 'code'=>1,
                 'msg'=>'收到了系统订单外的收款',

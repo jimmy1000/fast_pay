@@ -95,13 +95,17 @@ class Log
         $arr = explode($this->separator, $strlogs);
         unset($arr[0]);
         $row = [];
+        // 日志级别关键字映射，用于从内容中识别 level
         $levels = [
-            'ERROR'  => '[ error ]',
-            'NOTICE' => '[ notice ]',
-            'INFO'   => '[ info ]',
-            'DEBUG'  => '[ debug ]',
-            'SQL'    => '[ sql ]',
-            'LOG'    => '[ log ]',
+            'ERROR'    => '[ error ]',
+            'NOTICE'   => '[ notice ]',
+            'INFO'     => '[ info ]',
+            'DEBUG'    => '[ debug ]',
+            'SQL'      => '[ sql ]',
+            'LOG'      => '[ log ]',
+            // 自定义支付接口专用日志级别（配合 *_PAY_API.log / *_REPAY_API.log）
+            'PAY_API'  => '[ PAY_API ]',
+            'REPAY_API'=> '[ REPAY_API ]',
         ];
         foreach ($arr as $k => $v) {
             $regex = '/\[\s(\d+-\d+-\d+T\d+:\d+:\d+).{6}\s\]\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s([A-Z]{3,8})\s(.+)/';
