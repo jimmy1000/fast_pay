@@ -38,7 +38,7 @@ class Xspay extends Base
 
     public function notify()
     {
-        Log::write('印度支付Xspay回调信息:' . http_build_query($_REQUEST), 'CHANNEL');
+        Log::write('印度支付Xspay回调信息:' . http_build_query($_REQUEST), 'PAY_CHANNEL');
         $data = $_REQUEST;
         $response_data = array();
         $response_data['payOrderId'] = $data['payOrderId']; //平台订单号
@@ -108,6 +108,7 @@ class Xspay extends Base
 
     public function repay($params)
     {
+
         $config = $params['params'];
         $sys_orderno =$params['orderno'];
         $payData=$params['payData'];
@@ -147,7 +148,7 @@ class Xspay extends Base
     }
     public function repaynotify()
     {
-        Log::write('印度支付Xspay代付回调信息:' . http_build_query($_REQUEST), 'CHANNEL');
+        Log::write('Xspay代付回调信息:' . http_build_query($_REQUEST), 'REPAY_CHANNEL');
         $data = $_REQUEST;
         $response_data = array();
         $response_data['payOrderId'] = $data['payOrderId']; //平台订单号

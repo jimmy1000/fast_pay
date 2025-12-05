@@ -173,7 +173,7 @@ return [
         // 日志记录级别（插件会合并自定义级别）
         'level' => ['PAY_API','REPAY_API','API','REPAY_ERROR','PAY_ERROR','PAY_CHANNEL','REPAY_CHANNEL'],
         // 需要单独记录到独立文件的级别（支持自定义级别）
-        'apart_level' => ['PAY_API','REPAY_API','API','REPAY_ERROR','PAY_ERROR','PAY_CHANNEL'.'REPAY_CHANNEL'],
+        'apart_level' => ['PAY_API','REPAY_API','API','REPAY_ERROR','PAY_ERROR','PAY_CHANNEL','REPAY_CHANNEL'],
     ],
     // +----------------------------------------------------------------------
     // | Trace设置 开启 app_trace 后 有效
