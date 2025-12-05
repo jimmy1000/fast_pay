@@ -20,7 +20,7 @@ class RepayNotify
      */
     public function fire(Job $job, $data)
     {
-        $order_id = $data['order_id'];
+        $order_id = $data['pay_id'];
 
         // 分布式锁：保证同一时刻同一订单只会被处理一次
         $redislock = redisLocker();

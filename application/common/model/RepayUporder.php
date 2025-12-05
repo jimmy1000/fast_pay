@@ -48,4 +48,5 @@ class RepayUporder Extends Model
         return $this->belongsTo('ApiAccount','api_account_id','id','','LEFT')->setEagerlyType(0);
     }
 
+
 }

@@ -77,7 +77,7 @@ class Notify
             $msg = date("Y-m-d H:i:s") . ' 代收异步通知发送:订单号=>' .$orderModel['orderno'] . ', 通知地址：' . $notifyUrl;
             $msg .= ', 通知数据: ' . json_encode($post_data, JSON_UNESCAPED_UNICODE);
             echo $msg . PHP_EOL;
-            Log::record($msg, 'NOTIFY');
+            Log::record($msg, 'PAY_NOTIFY');
             // 发起 HTTP POST 通知
             $result = Http::post($notifyUrl, $post_data);
 
