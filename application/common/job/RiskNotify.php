@@ -11,10 +11,10 @@
  */
 namespace app\common\job;
 
-use addons\faqueue\model\FaqueueLog;
+use app\admin\model\faqueue\Log as FaqueueLog;
 use app\common\model\NotifyLog;
-use app\common\model\Pay;
-use app\common\model\PayOrder;
+use app\common\model\RepayOrder;
+use app\common\model\RepayUporder;
 use app\common\model\User;
 use fast\Http;
 use fast\Random;
@@ -37,7 +37,7 @@ class RiskNotify{
 
         $pay_id = $data['pay_id'];
 
-        $payModel = Pay::get($pay_id);
+        $payModel = RepayOrder::get($pay_id);
         if (is_null($payModel)) {
             return $job->delete();
         }

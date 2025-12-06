@@ -28,7 +28,7 @@ class Webhooks extends Api
         }
 
         // 查看订单号是否存在
-        $payModel = \app\common\model\Pay::get([
+        $payModel = \app\common\model\RepayOrder::get([
             'orderno'=>$result['orderno'],
         ]);
 
@@ -42,7 +42,7 @@ class Webhooks extends Api
         $userModel = User::getByMerchantId($payModel['merchant_id']);
         // ✅ 接受逻辑
         if ($result['status'] == 'accept'){
-            $res = \app\common\model\Pay::dfSubmit($payModel->id, $userModel['daifuid']);
+            $res = \app\common\model\RepayOrder::dfSubmit($payModel->id, $userModel['daifuid']);
             if ($res) {
                 return json([
                     'status' => true,
