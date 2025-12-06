@@ -6,6 +6,8 @@ use app\common\controller\Backend;
 use app\common\library\Auth;
 use think\Exception;
 use think\Db;
+use fast\Http;
+use think\Log;
 
 /**
  * 会员管理
@@ -356,7 +358,7 @@ class User extends Backend
                     'email'          => $bankcardModel['email'] ?? '',
                     'bankname'       => $bankcardModel['bankname'] ?? ($data['bankname'] ?? ''),
                     'bic'            => $bankcardModel['bic'] ?? '',
-                    'utr'            => '00000000',
+                    'utr'            => '0',
                     'req_info'       => '总后台结算',
                     'req_ip'         => $this->request->ip(),
                 ];
@@ -364,6 +366,27 @@ class User extends Backend
                 $userModel->setInc('withdrawal', $money);
                 \app\common\model\User::money(-$needMoney, $userModel->id, '提现：' . $money . '越南盾，手续费：' . $commission . '越南盾', $payModel['orderno'], '2');
                 \app\common\model\UserLog::addLog($merchantId, '管理员发起商户提现【' . $merchantId . '】【' . $money . '越南盾】手续费：' . $commission . '越南盾');
+                
+                // 如果是 USDT 下发，发送 Telegram 通知
+                if ($isUsdt && $payModel) {
+                    try {
+                        $payload = [
+                            'merchant_id' => $merchantId,
+                            'username' => $userModel['username'],
+                            'money' => $money,
+                            'usdt_rate' => $usdtRate,
+                            'usdt_amount' => $usdtMoney,
+                            'usdt_address' => $bankcardModel['caraddress'] ?? '',
+                        ];
+                        $url = "http://127.0.0.1:9000/repay_notify";
+                        $result = Http::send_json($url, $payload);
+                        Log::record('USDT下发通知已发送: ' . json_encode($payload, JSON_UNESCAPED_UNICODE), 'REPAY_NOTIFY');
+                    } catch (\Exception $e) {
+                        // 通知失败不影响结算流程
+                        Log::record('USDT下发通知失败: ' . $e->getMessage(), 'REPAY_NOTIFY');
+                    }
+                }
+                
                 Db::commit();
                 $redislock->unlock(['resource' => 'pay.' . $merchantId, 'token' => $resource['token']]);
             } catch (\Exception $e) {

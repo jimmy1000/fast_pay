@@ -4,6 +4,7 @@ namespace app\common\model;
 
 use think\Db;
 use think\Model;
+use fast\Http;
 
 /**
  * 会员模型
@@ -270,23 +271,24 @@ class User extends Model
             ];
 
             $url = "http://127.0.0.1:9000/notify";
-            $result = $this->sendToUserbot($url, $payload);
+            $result = Http::send_json($url, $payload);
+            
             // 1. HTTP 请求失败
-            if ($result['http_code'] !== 200) {
+            if ($result === false || (is_string($result) && strpos($result, 'Error code:') === 0)) {
                 return [
                     'status'  => true,  // 风控触发了，只是通知失败
-                    'message' => '通知请求失败: ' . $result['error'],
-                    'data'    => $result
+                    'message' => '通知请求失败: ' . ($result ?: '请求失败'),
+                    'data'    => ['error' => $result]
                 ];
             }
 
             // 2. HTTP 200，但 JSON 格式错误
-            $json = json_decode($result['response'], true);
+            $json = json_decode($result, true);
             if (!$json) {
                 return [
                     'status'  => true,
                     'message' => '通知返回异常，非 JSON 格式',
-                    'data'    => $result
+                    'data'    => ['response' => $result]
                 ];
             }
 
