@@ -26,7 +26,12 @@ class Auth
     //默认配置
     protected $config = [];
     protected $options = [];
-    protected $allowFields = ['id', 'username', 'nickname', 'mobile', 'avatar', 'score'];
+    protected $allowFields = [
+        'id', 'group_id', 'merchant_id', 'username', 'nickname', 'paypassword', 
+        'mobile', 'avatar', 'bio', 'money', 'score', 'successions', 'loginip',
+        'googlesecret', 'googlebind', 'mobilebind', 'payrate_each', 'payrate_percent',
+        'public_key', 'req_url'
+    ];
 
     public function __construct($options = [])
     {
@@ -204,14 +209,26 @@ class Auth
     /**
      * 用户登录
      *
-     * @param string $account  账号,用户名、邮箱、手机号
+     * @param string $account  账号,商户号或用户名
      * @param string $password 密码
+     * @param string $googlemfa Google MFA验证码
      * @return boolean
      */
-    public function login($account, $password)
+    public function login($account, $password, $googlemfa = '')
     {
-        $field = Validate::is($account, 'email') ? 'email' : (Validate::regex($account, '/^1\d{10}$/') ? 'mobile' : 'username');
-        $user = User::get([$field => $account]);
+        // 判断是商户号还是用户名
+        // 商户号通常是数字，且长度较长（如：20240727, 2025114等）
+        // 先尝试按商户号查询（商户号是整数类型）
+        $user = null;
+        if (is_numeric($account) && strlen($account) >= 6) {
+            $user = User::get(['merchant_id' => intval($account)]);
+        }
+        
+        // 如果不是商户号或商户号查询失败，则按用户名查询
+        if (!$user) {
+            $user = User::get(['username' => $account]);
+        }
+        
         if (!$user) {
             $this->setError('Account is incorrect');
             return false;
@@ -222,13 +239,13 @@ class Auth
             return false;
         }
 
-        if ($user->loginfailure >= 10 && time() - $user->loginfailuretime < 86400) {
-            $this->setError('Please try again after 1 day');
+        // 验证Google MFA
+        if (!google_verify_code($user, $googlemfa)) {
+            $this->setError('Google MFA code is incorrect');
             return false;
         }
 
         if ($user->password != $this->getEncryptPassword($password, $user->salt)) {
-            $user->save(['loginfailure' => $user->loginfailure + 1, 'loginfailuretime' => time()]);
             $this->setError('Password is incorrect');
             return false;
         }

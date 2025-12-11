@@ -315,6 +315,20 @@ class User extends Model
         ];
     }
     /**
+     * 设置谷歌令牌绑定
+     * @param string $secret 密钥
+     * @param int $user_id 用户ID
+     * @return bool
+     */
+    public static function setGoogleSecret($secret, $user_id)
+    {
+        $user = self::get($user_id);
+        $user->googlesecret = $secret;
+        $user->googlebind = 1;
+        return $user->save();
+    }
+
+    /**
      * 清除谷歌令牌绑定
      * @param int $user_id
      * @return bool
@@ -424,6 +438,106 @@ class User extends Model
         }
         return $result;
 
+    }
+    /**
+     * 重新设置提现密码
+     * @param $password
+     */
+    public static function setPayPassword($password, $user_id)
+    {
+        $user = self::get($user_id);
+        $salt = \fast\Random::alnum();
+        $user->paysalt = $salt;
+        $user->paypassword = \app\common\library\Auth::instance()->getEncryptPassword($password, $salt);
+        //只允许写入指定字段
+        return $user->save();
+    }
+
+    /**
+     * 验证支付密码是否输入正确
+     * @param $password
+     * @param $user_id
+     */
+    public static function verifyPayPassword($password, $user_id)
+    {
+        $user = self::get($user_id);
+        $password = \app\common\library\Auth::instance()->getEncryptPassword($password, $user->paysalt);
+        return $password == $user->paypassword;
+    }
+    /**
+     * 获取用户可用的接口以及费率
+     */
+    public function getApiList()
+    {
+
+        $user_id = $this->getAttr('id');
+        //获取系统的所有开启的通道
+        $api_type_list = ApiType::getOpenList();
+        //获取用户的接口规则
+        $api_user_channels = UserApichannel::getListByUser($user_id);
+        $result = [];   //结果数组
+        foreach ($api_type_list as $type) {
+            $type_id = $type['id'];
+            $rule_id = $type['api_rule_id'];
+            $rate_flag = false;
+            //如果用户拥有默认的规则
+            if (!empty($api_user_channels[$type_id])) {
+                $rule_id = $api_user_channels[$type_id]['api_rule_id'] == 0 ? $rule_id : $api_user_channels[$type_id]['api_rule_id'];
+                $rate_flag = $api_user_channels[$type_id]['rate'] > 0 ? true : false;
+                //如果通道关闭了
+                if ($api_user_channels[$type_id]['status'] == 0) {
+                    continue;
+                }
+            }
+            //没有设置规则的情况下
+            if ($rule_id == 0) {
+                continue;
+            }
+            $channel_info = ApiRule::getChannelInfo($rule_id);
+
+            //没有设置的规则的时候不可用
+            if(empty($channel_info)){
+                continue;
+            }
+            if ($rate_flag) {
+                $channel_info['rate_list'] = [$api_user_channels[$type_id]['rate']];
+            }
+            $type_text = '';
+            switch ($channel_info['info']['type']) {
+                case '0':
+                    $type_text = '单通道模式';
+                    break;
+                case '1':
+                    $type_text = '顺序轮询';
+                    break;
+                case '2':
+                    $type_text = '随机轮询';
+                    break;
+            }
+            //封装结果
+            $result[] = [
+                'name' => $type['name'],  //接口名称
+                'id' => $type['id'],
+                'code' => $type['code'],  //调用代码
+                'rule_type' => $channel_info['info']['type'], //规则
+                'rule_type_text' => $type_text,
+                'rate' => implode(',', $channel_info['rate_list']), //费率数组
+                'money_range' => implode(',', $channel_info['money_range_list']),   //充值范围
+                'total' => $channel_info['total'],    //每天额度
+                'has' => $channel_info['has']         //已用额度
+            ];
+
+        }
+
+        return $result;
+
+    }
+    /**
+     * 资金变动表
+     */
+    public function moneylog()
+    {
+        return $this->hasMany('MoneyLog', 'user_id', 'id');
     }
 
 }

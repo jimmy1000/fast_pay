@@ -19,5 +19,16 @@ class MoneyLog extends Model
     protected $updateTime = '';
     // 追加属性
     protected $append = [
+        'style_text'
     ];
+    public function getStyleTextAttr($value,$data){
+        $value = $value ? $value : (isset($data['style']) ? $data['style'] : '');
+        $list = $this->getStyleList();
+        return isset($list[$value]) ? $list[$value] : '';
+    }
+
+    public function getStyleList()
+    {
+        return ['1' => '充值', '2' => '提现','3'=>'代理佣金'];
+    }
 }
