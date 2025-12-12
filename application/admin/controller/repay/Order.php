@@ -183,7 +183,7 @@ class Order extends Backend
             foreach ($list as $item) {
                 if ($values['status'] === '1') {
                     $values['paytime'] = time();
-                    $values['msg'] = $values['msg'] ?? '手动处理成功';
+                    $values['msg'] = $values['msg'] ?? '处理成功';
                 }
                 if ($values['status'] === '3') {
                     $values['daifustatus'] = '4';

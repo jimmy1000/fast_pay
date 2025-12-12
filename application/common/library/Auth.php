@@ -39,6 +39,10 @@ class Auth
             $this->config = array_merge($this->config, $config);
         }
         $this->options = array_merge($this->config, $options);
+        // 从配置中读取 keeptime，如果配置中有则使用配置值
+        if (isset($this->options['keeptime'])) {
+            $this->keeptime = intval($this->options['keeptime']);
+        }
     }
 
     /**

@@ -26,22 +26,9 @@ class RepayOrder extends Model
         'style_text',
         'status_text',
         'daifustatus_text',
-        'notify_status_text',
-        'createtime_text',
-        'paytime_text'
     ];
 
 
-    public function getCreatetimeTextAttr($value, $data)
-    {
-        $value = $value ? $value : (isset($data['createtime']) ? $data['createtime'] : '');
-        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
-    }
-    public function getPaytimeTextAttr($value, $data)
-    {
-        $value = $value ? $value : (isset($data['paytime']) ? $data['paytime'] : '');
-        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
-    }
 
     public function getStyleList()
     {
@@ -58,10 +45,6 @@ class RepayOrder extends Model
         return ['0' => '未提交', '1' => '已提交', '2' => '已失败', '3' => '已成功'];
     }
 
-    public function getNotifyStatusList()
-    {
-        return ['0' => '未通知', '1' => '通知成功', '2' => '通知失败'];
-    }
 
 
     public function getStyleTextAttr($value, $data)
@@ -87,13 +70,6 @@ class RepayOrder extends Model
         return isset($list[$value]) ? $list[$value] : '';
     }
 
-
-    public function getNotifyStatusTextAttr($value, $data)
-    {
-        $value = $value ? $value : (isset($data['notify_status']) ? $data['notify_status'] : '');
-        $list = $this->getNotifyStatusList();
-        return isset($list[$value]) ? $list[$value] : '';
-    }
 
     protected function getReqInfoAttr($value)
     {

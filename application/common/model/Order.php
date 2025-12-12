@@ -24,8 +24,6 @@ class Order extends Model
         'style_text',
         'status_text',
         'notify_status_text',
-        'paytime_text',
-        'createtime_text',
     ];
 
     public static function createOrderNo()
@@ -44,17 +42,6 @@ class Order extends Model
         return $req;
     }
 
-    public function getPaytimeTextAttr($value, $data)
-    {
-        $value = $value ? $value : (isset($data['paytime']) ? $data['paytime'] : '');
-        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
-    }
-
-    public function getCreatetimeTextAttr($value, $data)
-    {
-        $value = $value ? $value : (isset($data['createtime']) ? $data['createtime'] : '');
-        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
-    }
 
     public function getStyleTextAttr($value, $data)
     {

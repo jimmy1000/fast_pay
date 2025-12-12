@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * 代付代收api接口
+ * @author : jimmy
+ * @date : 2025-12-12
+ */
 namespace app\api\controller;
 
 use app\common\controller\Api;
@@ -9,7 +13,6 @@ use app\common\model\ApiLog;
 use app\common\model\RepayLog;
 use app\common\model\ApiRule;
 use app\common\model\ApiType;
-use app\common\model\Bank;
 use app\common\model\Order;
 use app\common\model\User;
 use app\common\model\UserLog;

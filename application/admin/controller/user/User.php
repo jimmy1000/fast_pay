@@ -349,7 +349,7 @@ class User extends Backend
                     'caraddress'     => $isUsdt ? ($bankcardModel['caraddress'] ?? '-') : '-',
                     'usdt_rate'      => $isUsdt ? $usdtRate : 0,
                     'usdt'           => $isUsdt ? $usdtMoney : 0,
-                    'msg'            => $data['msg'] ?? '管理员给商户提现',
+                    'msg'            => $data['msg'] ?? '客服给商户提现',
                     'image'          => '',
                     'status'         => $data['status'],
                     'account'        => $bankcardModel['bankaccount'] ?? '',

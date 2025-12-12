@@ -35,7 +35,9 @@ class Token extends Api
         \app\common\library\Token::delete($token);
         //创建新Token
         $token = Random::uuid();
-        \app\common\library\Token::set($token, $this->auth->id, 2592000);
+        // 从配置中获取 token 过期时间
+        $keeptime = \think\Config::get('user.keeptime', 2592000);
+        \app\common\library\Token::set($token, $this->auth->id, $keeptime);
         $tokenInfo = \app\common\library\Token::get($token);
         $this->success('', ['token' => $tokenInfo['token'], 'expires_in' => $tokenInfo['expires_in']]);
     }

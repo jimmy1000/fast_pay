@@ -137,7 +137,7 @@ class Settle extends Backend
             $settleModel->save([
                 'status'   => '1',
                 'paytime'  => time(),
-                'msg'      => '手动处理成功',
+                'msg'      => '处理成功',
             ]);
             Db::commit();
             $this->success('手动成功处理完成');
