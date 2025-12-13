@@ -170,7 +170,7 @@ class Tatapay extends Base
         $get_sign = $this->_sign($response_data,$key);//执行签名
         if($response_data['sign']==$get_sign) {
             if ($response_data['status'] == '2') {
-                $result = Pay::changePayStatus([
+                $result = RepayOrder::changePayStatus([
                     'orderno' => $response_data['merchantOrderNo'],//订单号
                     'money' => number_format($response_data['amount'] / 100, 0, '', ''),//金额
                     'outorderno' => $response_data['orderNo'],//上游订单号
@@ -180,7 +180,7 @@ class Tatapay extends Base
                 Log::write('Tatapay代付异步成功通知:'.implode($result),'success');
                 // Log::record('代付异步通知！','CHANNEL');
             }else{
-                $result = Pay::changePayStatus([
+                $result = RepayOrder::changePayStatus([
                     'orderno' => $response_data['merchantOrderNo'],
                     'money' =>number_format($response_data['amount'] / 100, 0, '', ''),//金额
                     'outorderno' => $response_data['orderNo'],

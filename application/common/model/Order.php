@@ -118,9 +118,8 @@ class Order extends Model
         if ($agentRate <= 0) {
             $agentRate = $data['rate'];
         }
-
-        $agentMoney = 0;
         $nowRate = $agentRate;
+        $agentMoney = 0; // 初始化代理金额
         if ($agentRate < $data['rate']) {
             $agentMoney = $data['money'] * ($data['rate'] - $agentRate) / 100;
             $agentMoney = number_format($agentMoney, 2);
@@ -129,8 +128,8 @@ class Order extends Model
             }
         } else {
             $nowRate = $data['rate'];
+            $agentMoney = 0; // 代理费率大于等于订单费率时，代理金额为0
         }
-
         if (empty($data['level'])) {
             $data['level'] = 1;
         }
@@ -162,7 +161,6 @@ class Order extends Model
                 }
             }
         }
-
         return $moneyBuffer;
     }
 

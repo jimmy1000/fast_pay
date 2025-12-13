@@ -50,6 +50,16 @@ class Order extends Backend
      */
     public function index()
     {
+        $config = get_addon_config('mq');
+
+        $time = time() - intval($config['orderValidity']) * 60;
+
+        $this->model->save([
+            'status' => '2'
+        ], [
+            'status' => '0',
+            'createtime' => ['LT', $time],
+        ]);
         //设置过滤方法
         $this->request->filter(['strip_tags']);
         if ($this->request->isAjax()) {

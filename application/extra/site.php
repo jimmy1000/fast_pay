@@ -54,7 +54,7 @@ return array (
   'ifagentmoney' => '1',
   'agent_change_rate' => '1',
   'ifcheckka' => '0',
-  'agent_ratio' => '0.5',
+  'agent_ratio' => '0.2',
   'minpay' => '100',
   'paytest' => '1',
   'minrecharge' => '100',

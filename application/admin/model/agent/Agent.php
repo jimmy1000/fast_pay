@@ -30,11 +30,9 @@ class Agent extends Model
     
 
     
-
-
-
-
-
-
+    public function myorder()
+    {
+        return $this->belongsTo('app\admin\model\order\Order', 'order_id', 'id');
+    }
 
 }

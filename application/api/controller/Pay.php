@@ -201,44 +201,8 @@ class Pay extends Api
          */
 
 
-        //网银如果传入bankcode 高于用户配置
-        if ($channel == 'bank' && !empty($bankcode)) {
-            $bankModel = Bank::get([
-                'bankcode' => $bankcode,
-                'status' => '1'
-            ]);
-            if (is_null($bankModel)) {
-                $msg = '系统暂不支持该银行代码';
-                ApiLog::log($data, $msg);
-                $this->error($msg);
-            }
-
-            //是否设置了规则
-            if (!empty($bankModel->api_rule_id)) {
-
-                //修正规则
-                $channel_info = ApiRule::getChannelInfo($bankModel->api_rule_id, false,true,$orderAmt);
-
-                $apiTypeModel = ApiType::get(['code' => $channel]);
-                $user_rate = $api_list['bank']['user_rate'];
-                //规则信息下面需要
-                $rule = [
-                    'id' => $channel_info['info']['api_type_id'],
-                    'account_id' => $channel_info['info']['api_account_ids']['id'],
-                    'domain' => $apiTypeModel['domain'],
-                    'account_weight' => $channel_info['info']['api_account_ids']['weight'],
-                    'rule_type' => $channel_info['info']['type'], //规则
-                    'rate' => $channel_info['rate_list'], //费率数组
-                    'total' => $channel_info['total'],    //每天额度
-                    'has' => $channel_info['has'],         //已用额度
-                    'user_rate' => $user_rate
-                ];
-            } else {
-                $rule = $api_list[$channel];
-            }
-        } else {
-            $rule = $api_list[$channel];
-        }
+        // 直接使用通道配置
+        $rule = $api_list[$channel];
 
         $api_type_id = $rule['id'];
         $api_account_id = 0;
@@ -341,17 +305,6 @@ class Pay extends Api
             $pay_domain = $accountModel['domain'];
         } elseif ($rule['domain']) {
             $domain = $rule['domain'];
-        }
-
-        //如果接口跳转系统收银台
-        if (empty($bankcode) && $channel == 'bank' && $channelModel['ifjump'] == '1') {
-            $data['gateway'] = '1'; //收银台标识
-            $gatewayUrl = url('/index/gateway', '', '', config('site.url')) . '?' . http_build_query($data);
-            $this->success('请求成功!', [
-                'payurl' => $gatewayUrl,           //支付地址
-                'orderno' => $order_no,           //订单号
-                'sysorderno' => ''                //系统订单号
-            ]);
         }
         //提交给接口的参数
         $params = [
@@ -739,7 +692,7 @@ class Pay extends Api
 
 
         //查看订单号是否存在
-        $payModel = \app\common\model\Pay::get([
+        $payModel = \app\common\model\RepayOrder::get([
             'orderno'=>$order_no,
         ]);
         //检查订单号是否重复

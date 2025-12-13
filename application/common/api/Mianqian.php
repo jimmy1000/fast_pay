@@ -13,19 +13,19 @@ class Mianqian extends Base
 
     public function pay($params)
     {
-        $channel = $params['channel'];
+        $channel = $params['channel'] ?? '';
         try {
-
-            $url = \addons\mq\library\Mq::create($params['sys_orderno'], $params['total_money'], $channel);
+            $url = Mq::create($params['sys_orderno'], $params['total_money'], $channel);
             return [1, $url];
         } catch (\Exception $e) {
+            Log::write('免签支付创建订单失败，订单号：' . ($params['sys_orderno'] ?? '') . '，错误：' . $e->getMessage(), 'error');
             return [0, $e->getMessage()];
         }
     }
 
     public function backurl($orderno = '')
     {
-        return parent::backurl();
+        return parent::backurl($orderno);
     }
 
     /**
@@ -33,15 +33,17 @@ class Mianqian extends Base
      */
     public function notify()
     {
-
-        $price = $_REQUEST['price'];
-        $channel = $_REQUEST['channel'];
-        $sign = $_REQUEST['sign'];
-        $utr = $_REQUEST['utr'];
+        $price = $_REQUEST['price'] ?? '';
+        $channel = $_REQUEST['channel'] ?? '';
+        $sign = $_REQUEST['sign'] ?? '';
+        $utr = $_REQUEST['utr'] ?? '';
+        
         $addon_config = get_addon_config('mq');
-        $key = $addon_config['secretkey'];
+        $key = $addon_config['secretkey'] ?? '';
+        
         //验证签名
         if(md5(md5($price.$channel).$key) !== $sign ){
+            Log::write('免签支付回调签名验证失败，金额：' . $price . '，渠道：' . $channel, 'PAY_CHANNEL');
             $data = [
                 'code'=>1,
                 'msg'=>'处理订单失败，秘钥有误',
@@ -53,49 +55,63 @@ class Mianqian extends Base
         }
 
         //找到是否有这个订单
-        $orderNo = Mq::findOrderno($price,$channel);
+        $orderNo = Mq::findOrderno($price, $channel);
         if(!$orderNo){
-            Log::write('警告：收到订单外的收款信息，收到来自' .$channel . '金额' .$price . '但不是收款系统订单中的付款信息!','PAY_CHANNEL');
+            Log::write('警告：收到订单外的收款信息，收到来自' . $channel . '金额' . $price . '但不是收款系统订单中的付款信息!', 'PAY_CHANNEL');
             $data = [
                 'code'=>1,
                 'msg'=>'收到了系统订单外的收款',
                 'data'=>'',
-                'utr'=>$utr??'',
+                'utr'=>$utr,
                 'url'=>'/api/notify.html',
                 'wait'=>3
             ];
             exit(json_encode($data,JSON_UNESCAPED_UNICODE));
         }
-
+        
         $orderModel = Order::get(['sys_orderno'=>$orderNo]);
+        if(is_null($orderModel)){
+            Log::write('免签支付回调：订单不存在，订单号：' . $orderNo, 'error');
+            $data = [
+                'code'=>1,
+                'msg'=>'订单不存在',
+                'data'=>'',
+                'url'=>'/api/notify.html',
+                'wait'=>3
+            ];
+            exit(json_encode($data,JSON_UNESCAPED_UNICODE));
+        }
         //同一时刻 同一用户只能处理一个
         $redislock = redisLocker();
-        $resource = $redislock->lock('pay.' . $orderModel['merchant_id'], 3000);   //单位毫秒
-
-        if(!$resource){
-            sleep(1);
-            $resource = $redislock->lock('pay.' . $orderModel['merchant_id'], 3000);   //单位毫秒
-        }
+        $lockKey = 'pay.' . $orderModel['merchant_id'];
+        $resource = $redislock->lock($lockKey, 3000);   //单位毫秒
+        
         if($resource){
+
             try {
                 //更新订单状态
                 $params = [
-                    'orderno' =>$orderNo,    //系统订单号
+                    'orderno' => $orderNo,    //系统订单号
                     'up_orderno' => '公司直营',   //上游单号
                     'utr' => $utr,
                     'amount' => $orderModel['total_money'] / 1       //金额
                 ];
+               
                 $result = $this->orderFinish($params);
+                //检查订单处理结果
+                if($result[0] != 1){
+                    Log::write('免签支付回调：订单处理失败，订单号：' . $orderNo . '，错误：' . $result[1], 'error');
+                }
+                
                 //在这里也要更新一下免签订单中的状态
                 Mq::orderFinish($orderNo);
             } catch (\Exception $e) {
-
+                Log::write('免签支付回调处理异常，订单号：' . $orderNo . '，错误：' . $e->getMessage(), 'error');
             } finally {
-                $redislock->unlock(['resource' =>'pay.' . $orderModel['merchant_id'], 'token' => $resource['token']]);
+                $redislock->unlock(['resource' => $lockKey, 'token' => $resource['token']]);
             }
-        }else{
-            Log::write('获取锁失败！订单号:'.$orderNo,'error');
-
+        } else {
+            Log::write('获取锁失败！订单号:'.$orderNo, 'error');
             $data = [
                 'code'=>1,
                 'msg'=>'获取锁失败',
@@ -104,7 +120,6 @@ class Mianqian extends Base
                 'wait'=>3
             ];
             exit(json_encode($data,JSON_UNESCAPED_UNICODE));
-
         }
 
         $data = [
@@ -114,10 +129,7 @@ class Mianqian extends Base
             'url'=>'/api/notify.html',
             'wait'=>3
         ];
-
         exit(json_encode($data,JSON_UNESCAPED_UNICODE));
-
-
     }
     public function repay($params)
     {

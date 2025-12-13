@@ -25,7 +25,35 @@ class Agent extends Backend
 
     }
 
+    public function index()
+    {
+        //设置过滤方法
+        $this->request->filter(['strip_tags']);
+        if ($this->request->isAjax()) {
+            //如果发送的来源是Selectpage，则转发到Selectpage
+            if ($this->request->request('keyField')) {
+                return $this->selectpage();
+            }
+            list($where, $sort, $order, $offset, $limit) = $this->buildparams();
+            $total = $this->model
+                ->with(['myorder'])
+                ->where($where)
+                ->order($sort, $order)
+                ->count();
+            $list = $this->model
+                ->with(['myorder'])
+                ->where($where)
+                ->order($sort, $order)
+                ->limit($offset, $limit)
+                ->select();
+            foreach ($list as $k => $v) {
+            }
+            $result = array("total" => $total, "rows" => $list);
 
+            return json($result);
+        }
+        return $this->view->fetch();
+    }
 
     /**
      * 默认生成的控制器所继承的父类中有index/add/edit/del/multi五个基础方法、destroy/restore/recyclebin三个回收站方法

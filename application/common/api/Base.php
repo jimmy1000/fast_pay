@@ -1,27 +1,24 @@
 <?php
-/**
- * Base.php
- * 易聚合支付系统
- * =========================================================
- * 请尊重开发人员劳动成果，严禁使用本系统转卖、销售或二次开发后转卖、销售等商业行为。
- * 本源码仅供技术学习研究使用,请勿用于非法用途,如产生法律纠纷与作者无关。
- * =========================================================
- * @author : 666666@qq.com
- * @date : 2019-04-29
- */
-
+/*
+* 基础api类
+* @author：jimmy
+* @date：2025-12-14
+*/
 namespace app\common\api;
 
 use app\common\model\ApiChannel;
 use app\common\model\Order;
 use app\common\model\OrderAgent;
-use app\common\model\PayOrder;
+use app\common\model\RepayOrder;
+use app\common\model\RepayUporder;
 use app\common\model\User;
 use fast\Random;
 use fast\Rsa;
 use think\Cache;
 use think\Db;
+use think\Log;
 use think\Queue;
+use Exception;
 
 abstract class  Base
 {
@@ -29,7 +26,7 @@ abstract class  Base
 
     protected function getPayConfig($orderno){
 
-        $payOrder = PayOrder::get([
+        $payOrder = RepayUporder::get([
             'orderno'=>$orderno
         ]);
         if (is_null($payOrder)) {
@@ -100,8 +97,6 @@ abstract class  Base
             return [0, '用户不存在'];
         }
 
-
-
         /**
          *
          * 计算代理费用
@@ -142,9 +137,9 @@ abstract class  Base
             //给用户加上余额
             $money = $orderModel['have_money'];
             if($orderModel->style == '1'){
-                User::money($money,$userModel->id,'充值：' . $orderModel['total_money'] . '比索，扣除手续费到账：' . $money . '比索',$orderModel->orderno);
+                User::money($money,$userModel->id,'充值：' . $orderModel['total_money'] . '越南盾，扣除手续费到账：' . $money . '越南盾',$orderModel->orderno);
             }else{
-                User::money($money,$userModel->id,'资金流水记录：订单金额' . $orderModel['total_money'] . '比索，到账金额' . $money . '比索',$orderModel->orderno);
+                User::money($money,$userModel->id,'资金流水记录：订单金额' . $orderModel['total_money'] . '越南盾' . $money . '越南盾',$orderModel->orderno);
             }
 
             //代理金额增加
@@ -186,17 +181,15 @@ abstract class  Base
         if($orderModel->style!='1'){
             //加入通知队列 发送异步通知
             try {
-                $result =  Queue::push('app\common\job\Notify',['order_id'=>$orderModel->id]);
+                $result = Queue::push('app\common\job\Notify',['order_id'=>$orderModel->id]);
                 if (is_array($result)) {
-                    file_put_contents('mq_result.txt', "\n".implode(', ', $result), FILE_APPEND);
+                    Log::write('订单通知队列推送成功，订单ID：' . $orderModel->id . '，结果：' . implode(', ', $result), 'PAY_NOTIFY');
                 } else {
-                    file_put_contents('mq_result.txt', "\n".$result, FILE_APPEND);
+                    Log::write('订单通知队列推送成功，订单ID：' . $orderModel->id . '，结果：' . $result, 'PAY_NOTIFY');
                 }
             } catch (Exception $e){
-                echo "Caught exception: " . $e->getMessage();
+                Log::write('订单通知队列推送失败，订单ID：' . $orderModel->id . '，错误：' . $e->getMessage(), 'error');
             }
-
-
         }
 
         return [1,'success'];
