@@ -45,7 +45,10 @@ class RepayOrder extends Model
         return ['0' => '未提交', '1' => '已提交', '2' => '已失败', '3' => '已成功'];
     }
 
-
+    public function getNotifyStatusList()
+    {
+        return ['0' => '未通知', '1' => '通知成功', '2' => '通知失败'];
+    }
 
     public function getStyleTextAttr($value, $data)
     {

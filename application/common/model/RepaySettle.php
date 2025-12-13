@@ -23,6 +23,7 @@ class RepaySettle extends Model
     // 追加属性
     protected $append = [
         'style_text',
+        'status_text',
     ];
 
     public function getStyleList(): array
@@ -40,6 +41,20 @@ class RepaySettle extends Model
         return ['TRC20' => 'TRC20', 'ERC20' => 'ERC20', '-' => '-'];
     }
 
+    public function getStatusList(): array
+    {
+        return [
+            '0' => __('审核中'),
+            '1' => __('已支付'),
+            '2' => __('取消'),
+        ];
+    }
+    public function getStatusTextAttr($value, $data)
+    {
+        $value = $value ?: ($data['status'] ?? '');
+        $list = $this->getStatusList();
+        return $list[$value] ?? '';
+    }
 
     public function getStyleTextAttr($value, $data)
     {
@@ -62,18 +77,4 @@ class RepaySettle extends Model
         return $list[$value] ?? '';
     }
 
-
-    public function getPaytimeTextAttr($value, $data)
-    {
-        $value = $value ?: ($data['paytime'] ?? '');
-        return is_numeric($value) && $value > 0 ? date("Y-m-d H:i:s", $value) : $value;
-    }
-
-    protected function setPaytimeAttr($value)
-    {
-        if ($value === '' || $value === null) {
-            return null;
-        }
-        return is_numeric($value) ? $value : strtotime($value);
-    }
 }

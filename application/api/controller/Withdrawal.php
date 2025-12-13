@@ -187,20 +187,18 @@ class Withdrawal extends Api
     }
 
     /**
-     * 批量结算
+     * 批量代付
      *
      */
 
     public function batchapply()
     {
 
-        $data = $this->request->only(['payPassword', 'codeStyle', 'smsCode', 'googleCode', 'list']);
+        $data = $this->request->only(['payPassword', 'googlemfa', 'list']);
         $rules = [
             'list|提现列表' => 'require|array|length:1,20',
             'payPassword|支付密码' => 'require|length:6,16',
-            'codeStyle|验证码类型' => 'require|in:1,2',
-        //    'smsCode|短信验证码' => 'requireIf:codeStyle,2',
-            'googleCode|谷歌验证码' => 'requireIf:codeStyle,1'
+            'googlemfa|谷歌验证码' => 'require'
         ];
 
         $result = $this->validate($data, $rules);
@@ -282,17 +280,15 @@ class Withdrawal extends Api
                 'bankname' => $item['bankname'],
                 'email' => $item['email'],
                 'phone' => $item['phone'],
-                'ifsc' => $item['ifsc'],
-                'bank_code'=>'BANK_IN',
+                'bic' => $item['bic'] ?? '',
+                'bank_code' => 'BANK_IN',
+                'notifyUrl' => '',
                 'status' => '0',
-                'caraddresstype'=>'-',
-                'caraddress' =>'-',
-                'msg'=>'',
                 'daifustatus' => '0',
                 'charge' => $commission,
+                'msg' => '',
                 'req_info' => '',
-                'req_ip' => '批量代付',
-                'createtime' => time()
+                'req_ip' => ''
             ];
         }
 
@@ -306,10 +302,10 @@ class Withdrawal extends Api
             $this->error('支付金额小于最小要求金额！最低支付' . config('site.minpay') . '越南盾');
         }
 
-
-        //检查验证码
-        $code = $data['codeStyle'] == 1 ? $data['googleCode'] : $data['smsCode'];
-        $this->checkUserCode($data['codeStyle'], $code, 'batchrepay');
+        //验证Google MFA
+        if (!google_verify_code($userModel, $data['googlemfa'])) {
+            $this->error(__('Google MFA code is incorrect'));
+        }
 
         //验证支付密码是否正确
         $flag = \app\common\model\User::verifyPayPassword($data['payPassword'], $this->auth->id);
@@ -327,7 +323,7 @@ class Withdrawal extends Api
             Db::startTrans();
 
             try {
-                $payModel = new \app\common\model\Pay();
+                $payModel = new \app\common\model\RepayOrder();
                 $payModel->saveAll($dataList);
                 //更新用户金额
                 $userModel->setInc('withdrawal', $tixianMoney);
@@ -349,7 +345,7 @@ class Withdrawal extends Api
         }
 
 
-        Notify::repay();
+       //Notify::repay();到时候做百度语音暂时先注释
 
 
         //判断自动代付提交
@@ -357,7 +353,7 @@ class Withdrawal extends Api
             if ($userModel['daifuid'] > 0) {
                 try {
                     foreach ($dataList as $item) {
-                        \app\common\model\Pay::dfSubmit($item['orderno'], $userModel['daifuid'], true);
+                        \app\common\model\RepayOrder::dfSubmit($item['orderno'], $userModel['daifuid'], true);
                     }
                 } catch (\Exception $e) {
                     Log::record('自动代付异常,商户号:' . $this->auth->merchant_id . '异常信息:' . $e->getMessage(), 'REPAY_ERROR');
@@ -371,14 +367,12 @@ class Withdrawal extends Api
      */
     public function apply()
     {
-        $data = $this->request->only(['money', 'bankcardId', 'payPassword', 'codeStyle', 'smsCode', 'googleCode']);
+        $data = $this->request->only(['money', 'bankcardId', 'payPassword', 'googlemfa','usdt','usdt_rate','msg']);
         $rules = [
             'money|提现金额' => 'require|float|>:0',
             'bankcardId|提款银行卡' => 'require|integer',
             'payPassword|支付密码' => 'require|length:6,16',
-            'codeStyle|验证码类型' => 'require|in:1,2',
-            'smsCode|短信验证码' => 'requireIf:codeStyle,2',
-            'googleCode|谷歌验证码' => 'requireIf:codeStyle,1'
+            'googlemfa|谷歌验证码' => 'require'
         ];
         $result = $this->validate($data, $rules);
         if ($result !== true) {
@@ -396,9 +390,12 @@ class Withdrawal extends Api
         $freezeMoney = $userModel->getFreezeMoney();
         //可用金额
         $userMoney = bcsub($balance, $freezeMoney, 2);
-        //检查验证码
-        $code = $data['codeStyle'] == 1 ? $data['googleCode'] : $data['smsCode'];
-        $this->checkUserCode($data['codeStyle'], $code, 'repay');
+        
+        //验证Google MFA
+        if (!google_verify_code($userModel, $data['googlemfa'])) {
+            $this->error(__('Google MFA code is incorrect'));
+        }
+        
         //验证支付密码是否正确
         $flag = \app\common\model\User::verifyPayPassword($data['payPassword'], $this->auth->id);
         if (!$flag) {
@@ -445,6 +442,9 @@ class Withdrawal extends Api
 
         //为了避免同时修改数据 还是加一下锁
 
+        // 判断是否为 USDT 类型
+        $isUsdt = strtolower((string)$bankcardModel['bankcardtype']) === 'usdt';
+        
         $redislock = redisLocker();
         $resource = $redislock->lock('pay.' . $merchant_id, 3000);   //单位毫秒
 
@@ -454,30 +454,35 @@ class Withdrawal extends Api
             Db::startTrans();
 
             try {
-                $data = [
+                // 生成订单号
+                $orderno = 'TX' . date('YmdHis') . mt_rand(100000, 999999);
+                
+                $settleData = [
                     'merchant_id' => $merchant_id,
-                    'orderno' => \app\common\model\Pay::createOrderNo(),
-                    'style' => '0',
+                    'orderno' => $orderno,
+                    'style' => $isUsdt ? '1' : '0', // 0=法币结算, 1=USDT下发
+                    'apply_style' => '0', // 0=商户后台, 1=系统后台
                     'money' => $money,
-                    'account' => $bankcardModel['account']??'',
-                    'name' => $bankcardModel['name']??'',
-                    'phone' => $bankcardModel['phone']??'',
-                    'email' => $bankcardModel['email']??'',
-                    'bank_code' => $bankcardModel['bank_code']??'',
-                    'msg' => '商户后台提现申请',
-                    'bankname' => $bankcardModel['bankname']??'',
-                    'ifsc' => $bankcardModel['ifsc']??'',
-                    'caraddresstype'=>$bankcardModel['caraddresstype']??'-',
-                    'caraddress'=>$bankcardModel['caraddress']??'',
-                    'status' => '0',
-                    'daifustatus' => '0',
                     'charge' => $commission,
+                    'caraddresstype' => $isUsdt ? ($bankcardModel['caraddresstype'] ?? '-') : '-',
+                    'caraddress' => $isUsdt ? ($bankcardModel['caraddress'] ?? '-') : '-',
+                    'usdt_rate' => isset($data['usdt_rate']) ? floatval($data['usdt_rate']) : ($isUsdt ? 0 : 0),
+                    'usdt' => isset($data['usdt']) ? floatval($data['usdt']) : ($isUsdt ? 0 : 0),
+                    'msg' => $data['msg'] ?? '商户后台提现申请',
+                    'image' => '',
+                    'status' => '0', // 0=审核中
+                    'account' => $bankcardModel['bankaccount'] ?? '',
+                    'name' => $bankcardModel['name'] ?? '',
+                    'phone' => $bankcardModel['phone'] ?? '',
+                    'email' => $bankcardModel['email'] ?? '',
+                    'bankname' => $bankcardModel['bankname'] ?? '',
+                    'bic' => $bankcardModel['bic'] ?? '',
+                    'utr' => '0',
                     'req_info' => '',
-                    'req_ip' => $this->request->ip(),
-                    'createtime' => time()
+                    'req_ip' => $this->request->ip()
                 ];
 
-                $payModel = \app\common\model\Pay::create($data);
+                $payModel = \app\common\model\RepaySettle::create($settleData);
 
                 //更新用户金额
                 $userModel->setInc('withdrawal', $money);
@@ -499,19 +504,25 @@ class Withdrawal extends Api
             $this->error('系统繁忙,请重新提交');
         }
 
-       // Notify::repay();到时候用百度语音
-        if($bankcardModel['bankcardtype']=='usdt') {
-            //把下发消息发送给tg群
-            $request_data = [];
-            $request_data['merchant_id'] = $merchant_id;//商户号
-            $request_data['username'] = $userModel['username'];//商户名称
-            $request_data['money'] = $money;//下发金额
-            $request_data['usdt_rate'] = config('site.usdt_rate');//下发汇率
-            $request_data['usdt_amount'] = number_format($money / config('site.usdt_rate'), 4, '.', '');//usdt数额
-            $request_data['usdt_address'] = $bankcardModel['caraddress'];//usdt地址
-            $url = "http://127.0.0.1:9000/repay_notify";
-            $result=Http::send_json($url, $request_data);
+        // 如果是 USDT 下发，发送 Telegram 通知
+        if ($isUsdt && isset($payModel)) {
+            try {
+                $request_data = [
+                    'merchant_id' => $merchant_id,
+                    'username' => $userModel['username'],
+                    'money' => $money,
+                    'usdt_rate' => isset($data['usdt_rate']) ? floatval($data['usdt_rate']) : 0,
+                    'usdt_amount' => isset($data['usdt']) ? floatval($data['usdt']) : 0,
+                    'usdt_address' => $bankcardModel['caraddress'] ?? '',
+                ];
+                $url = "http://127.0.0.1:9000/repay_notify";
+                Http::send_json($url, $request_data);
+            } catch (\Exception $e) {
+                // 通知失败不影响结算流程
+                \think\Log::record('USDT下发通知失败: ' . $e->getMessage(), 'REPAY_NOTIFY');
+            }
         }
+        
         $this->success('申请成功。');
     }
 
@@ -529,7 +540,6 @@ class Withdrawal extends Api
     public function settle()
     {
         $data = $this->request->only(['status', 'style', 'money', 'date']);
-
         $rules = [
             'status|状态' => 'in:0,1,2',
             'style|结算类型' => 'in:0,1',
@@ -549,12 +559,10 @@ class Withdrawal extends Api
             'merchant_id' => $merchantId
         ];
 
-        // 状态
         if (isset($data['status']) && $data['status'] !== '') {
             $where['status'] = $data['status'];
         }
 
-        // 结算类型
         if (isset($data['style']) && $data['style'] !== '') {
             $where['style'] = $data['style'];
         }
@@ -623,43 +631,119 @@ class Withdrawal extends Api
     {
         $extend = [];
 
-        // 今日结算
+        // 今日结算金额
         $extend['todayMoney'] = \app\common\model\RepaySettle::whereTime('createtime', 'today')
             ->where('merchant_id', $merchantId)
             ->sum('money') ?: 0;
-        $extend['todayCharge'] = \app\common\model\RepaySettle::whereTime('createtime', 'today')
-            ->where('merchant_id', $merchantId)
-            ->where('status', '1')
-            ->sum('charge') ?: 0;
 
-        // 昨日结算
+        // 昨日结算金额
         $extend['yesterMoney'] = \app\common\model\RepaySettle::whereTime('createtime', 'yesterday')
             ->where('merchant_id', $merchantId)
             ->sum('money') ?: 0;
-        $extend['yesterCharge'] = \app\common\model\RepaySettle::whereTime('createtime', 'yesterday')
-            ->where('merchant_id', $merchantId)
-            ->where('status', '1')
-            ->sum('charge') ?: 0;
 
-        // 总结算
+        // 总结算金额
         $extend['allMoney'] = \app\common\model\RepaySettle::where('merchant_id', $merchantId)
             ->sum('money') ?: 0;
+
+        // 列表手续费（符合筛选条件的）
+        $extend['listCharge'] = \app\common\model\RepaySettle::where($where)
+            ->sum('charge') ?: 0;
+
+        // 总手续费（所有记录的）
         $extend['allCharge'] = \app\common\model\RepaySettle::where('merchant_id', $merchantId)
-            ->where('status', '1')
             ->sum('charge') ?: 0;
 
-        // 已支付总额
-        $extend['allSuccMoney'] = \app\common\model\RepaySettle::where('merchant_id', $merchantId)
-            ->where('status', '1')
-            ->sum('money') ?: 0;
+        // 列表USDT（符合筛选条件的）
+        $extend['listUsdt'] = \app\common\model\RepaySettle::where($where)
+            ->sum('usdt') ?: 0;
 
-        // 列表金额（符合筛选条件的）
-        $extend['all'] = \app\common\model\RepaySettle::where($where)->sum('money') ?: 0;
-        $extend['charge'] = \app\common\model\RepaySettle::where($where)
-            ->where('status', '1')
-            ->sum('charge') ?: 0;
+        // 总USDT（所有记录的）
+        $extend['allUsdt'] = \app\common\model\RepaySettle::where('merchant_id', $merchantId)
+            ->sum('usdt') ?: 0;
 
         return $extend;
+    }
+
+    /**
+     * 获取订单日志
+     * 
+     * @ApiMethod (GET)
+     * @ApiParams (name="orderno", type="string", required=false, description="订单号")
+     * @ApiParams (name="status", type="integer", required=false, description="状态 0=失败 1=成功")
+     * @ApiParams (name="createtime", type="array", required=false, description="创建时间范围")
+     * @ApiParams (name="page", type="integer", required=false, description="页码，默认1")
+     * @ApiParams (name="orderField", type="string", required=false, description="排序字段，默认id")
+     */
+    public function repayLog()
+    {
+        $data = $this->request->only(['orderno', 'status', 'createtime']);
+
+        $rules = [
+            'orderno|订单号' => 'alphaDash',
+            'status|状态' => 'in:0,1',
+            'createtime|创建时间' => 'array',
+        ];
+
+        $result = $this->validate($data, $rules);
+        if ($result !== true) {
+            $this->error($result);
+        }
+
+        $merchantId = $this->auth->merchant_id;
+
+        // 构建查询条件
+        $where = [
+            'merchant_id' => $merchantId
+        ];
+
+        // 筛选订单号
+        if (!empty($data['orderno'])) {
+            $where['orderno'] = ['like', '%' . $data['orderno'] . '%'];
+        }
+
+        // 筛选状态
+        if (isset($data['status']) && $data['status'] !== '') {
+            $where['status'] = $data['status'];
+        }
+
+        // 处理创建时间范围
+        if (isset($data['createtime']) && is_array($data['createtime']) && count($data['createtime']) == 2) {
+            $timeRange = $this->parseTimeRange($data['createtime']);
+            $where['createtime'] = ['between time', $timeRange];
+        }
+
+        // 分页参数
+        $orderField = $this->request->param('orderField', 'id');
+        $sort = 'DESC';
+        $page = $this->request->param('page/d', 1);
+        $pageLimit = 10;
+        $offset = ($page - 1) * $pageLimit;
+
+        // 获取总数
+        $total = \app\common\model\RepayLog::where($where)->count();
+
+        // 获取列表数据
+        $list = \app\common\model\RepayLog::where($where)
+            ->order($orderField, $sort)
+            ->limit($offset, $pageLimit)
+            ->select();
+
+        // 设置可见字段（content 会自动反序列化，createtime 返回时间戳）
+        $visibleFields = [
+            'id', 'orderno', 'total_money', 'channel', 
+            'content', 'result', 'status', 'status_text', 
+            'ip', 'http', 'createtime'
+        ];
+        foreach ($list as $v) {
+            $v->visible($visibleFields);
+        }
+        $list = collection($list)->toArray();
+
+        $this->success('Data retrieved successfully', [
+            'total' => $total,
+            'list' => $list,
+            'limit' => $pageLimit
+        ]);
     }
 
 }

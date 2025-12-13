@@ -361,7 +361,8 @@ class User extends Backend
                     'utr'            => '0',
                     'req_info'       => '总后台结算',
                     'req_ip'         => $this->request->ip(),
-                ];
+                    'paytime'        => $data['status'] == '1' ? time() : null,
+                    ];
                 $payModel = \app\common\model\RepaySettle::create($payData);
                 $userModel->setInc('withdrawal', $money);
                 \app\common\model\User::money(-$needMoney, $userModel->id, '提现：' . $money . '越南盾，手续费：' . $commission . '越南盾', $payModel['orderno'], '2');

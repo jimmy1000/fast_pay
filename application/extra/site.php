@@ -78,5 +78,5 @@ return array (
   'daily_limit' => '10000',
   'back_rate_switch' => '0',
   'notice' => '<p><b>歡迎使用G3pay國際支付系統後台，我們真誠為您服務，</b><b>G3pay</b><b>國際支付唯一客服飛機：</b><b><span style="color:#E53333;">&nbsp;@G3pay888@ G3pay666</span>其他均為假冒， 謹防騙子假冒！EAPAY國際支付預祝各位商家日進鬥金，事事順利，萬事如意！</b></p><p><b>Welcome to use the&nbsp;</b><b>G3pay&nbsp;</b><b>International Payment system backend. We sincerely serve you. The only customer service of&nbsp;</b><b>G3pay&nbsp;</b><b>International Payment is: <b style="text-wrap:wrap;"><span style="color:#E53333;"><b style="text-wrap-mode:wrap;"><span style="color:#E53333;">@G3pay888@&nbsp;G3pay666</span></b><b style="text-wrap:wrap;"><b><span style="color:#E53333;"></span></b></b> <b style="text-wrap:wrap;"><b><span style="color:#E53333;"><b style="text-wrap:wrap;"><b><span style="color:#E53333;"><b><b>&nbsp;</b></b></span></b></b></span></b></b></span></b>Others are fake. Beware of scammers! Global International Payment wishes all merchants to make a fortune, everything goes well, and everything goes well!<br></b></p>',
-  'url' => 'http://fast_pay.com/api',
+  'url' => 'http://fast_pay.com/',
 );

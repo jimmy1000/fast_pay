@@ -1,37 +1,18 @@
 <?php
 /**
- * Bankcard.php
- * 易聚合支付系统
- * =========================================================
-
- * ----------------------------------------------
- *
- *
- * 请尊重开发人员劳动成果，严禁使用本系统转卖、销售或二次开发后转卖、销售等商业行为。
- * 本源码仅供技术学习研究使用,请勿用于非法用途,如产生法律纠纷与作者无关。
- * =========================================================
- * @author : 666666@qq.com
- * @date : 2019-05-09
+ * 结算卡管理控制器
+ * @author : jimmy
+ * @date : 2025-12-13
  */
 namespace app\api\controller;
 
-use addons\goeasy\library\Goeasy;
 use app\common\controller\Api;
-use app\common\model\ApiChannel;
-use app\common\model\UserApichannel;
 use app\common\model\UserLog;
-use easypay\Notify;
-use think\Db;
-use think\Exception;
-use think\Validate;
 
-class Bankcard extends Api{
-
+class Bankcard extends Api
+{
     protected $noNeedLogin = [];
-
-    //不需要权限检查的方法
     protected $noNeedRight = ['*'];
-
 
     public function _initialize()
     {
@@ -39,24 +20,22 @@ class Bankcard extends Api{
     }
 
     /**
-     * 银行卡列表
+     * 结算卡列表
      */
     public function index(){
         $data = $this->request->only(['name', 'bankaccount', 'status','bankcardtype','bankname','caraddresstype','caraddress']);
 
         $rules = [
-            'bankcardtype|结算卡类型' => 'chsAlpha|max:32',
-            'name|账户姓名' => 'chsAlpha|max:32',
-            'bankaccount|结算卡账号' => 'alphaNum|max:24',
-            'bankname|银行' => 'chsAlpha|max:32',
-            'ifsc|ifsc' => 'alphaNum|max:24',
-            'email|邮箱' => 'email|max:24',
-            'phone|手机号' => 'number|max:255',
-            'caraddresstype|USDT地址类型' => 'chsAlphaNum|max:10',
-            'caraddress|结算地址' => 'alphaNum|max:50',
-        ];
-        $messages = [
-            'status.in'=>'状态错误'
+            'bankcardtype|结算卡类型' => 'in:bank,usdt,alipay',
+            'name|账户姓名' => 'chsAlpha|max:30',
+            'bankaccount|结算卡账号' => 'max:30',
+            'bankname|银行名' => 'chsAlphaNum|max:50',
+            'bic|银行识别码' => 'alphaNum|max:20',
+            'email|邮箱' => 'email|max:20',
+            'phone|手机号' => 'max:255',
+            'status|状态' => 'in:0,1',
+            'caraddresstype|USDT地址类型' => 'in:ERC20,TRC20,-',
+            'caraddress|USDT结算地址' => 'max:255',
         ];
 
         $result = $this->validate($data, $rules);
@@ -125,19 +104,13 @@ class Bankcard extends Api{
     {
         $bankcardtype = $this->request->post('bankcardtype');
 
-        $rules = [];
-
-// 定义规则
         $allRules = [
             'bank' => [
                 'bankcardtype|结算卡类型' => 'require|chsAlpha|max:32',
                 'name|账户姓名' => 'require|chsAlpha|max:32',
                 'bankaccount|结算卡账号' => 'require|number|max:24',
                 'bankname|银行名' => 'require|chsAlpha|max:32',
-//                'province|省份' => 'require|chs|max:24',
-//                'city|城市' => 'require|chs|max:24',
-//                'zhihang|支行' => 'require|chsAlphaNum|max:255',
-                'ifsc|ifsc' => 'require|alphaNum|max:24',
+                'bic|银行码' => 'require|alphaNum|max:24',
                 'email|邮箱' => 'require|email|max:24',
                 'phone|手机号' => 'require|number|max:255',
             ],
@@ -186,15 +159,13 @@ class Bankcard extends Api{
             $data['status'] = '1';      //自动通过
         }
         try {
-            $bankcard = \app\common\model\Bankcard::create($data);
-            return json(['status' => 'success', 'message' => '银行卡信息保存成功', 'data' => $bankcard]);
+            \app\common\model\Bankcard::create($data);
         } catch (\Exception $e) {
-            return json(['status' => 'error', 'message' => $e->getMessage()]);
+            $this->error($e->getMessage());
         }
-        $value = isset($data['bank_account']) ? $data['bank_account'] : $data['caraddress'];
-        UserLog::addLog($this->auth->merchant_id, '添加结算卡类型'.$bankcardtype.'【' . $value . '】');
+        $value = isset($data['bankaccount']) ? $data['bankaccount'] : $data['caraddress'];
+        UserLog::addLog($this->auth->merchant_id, '添加结算卡类型  '.$bankcardtype.'【' . $value . '】');
 
-        Notify::bankcard();
 
         $this->success('添加结算卡成功');
 
@@ -224,81 +195,7 @@ class Bankcard extends Api{
     }
 
     /**
-     * 编辑银行卡
-     */
-    public function edit()
-    {
-        $bankcardtype = $this->request->post('bankcardtype');
-        $allRules = [
-            'bank' => [
-                'bankcardtype|结算卡类型' => 'require|chsAlpha|max:32',
-                'name|账户姓名' => 'require|chsAlpha|max:32',
-                'bankaccount|结算卡账号' => 'require|regex:/^[a-zA-Z0-9@.]+$/|max:32',
-                'bankname|银行名' => 'require|chsAlphaNum|max:32',
-//                'province|省份' => 'require|chs|max:24',
-//                'city|城市' => 'require|chs|max:24',
-//                'zhihang|支行' => 'require|chsAlphaNum|max:255',
-                'ifsc|ifsc' => 'require|alphaNum|max:24',
-                'email|邮箱' => 'require|email|max:24',
-                'phone|手机号' => 'require|number|max:255',
-            ],
-            'alipay' => [
-                'bankcardtype|结算卡类型' => 'require|chsAlpha|max:32',
-                'name|账户姓名' => 'require|chsAlpha|max:32',
-                'bankaccount|结算卡账号' => 'require|alphaNum|max:24',
-            ],
-            'usdt' => [
-                'bankcardtype|结算卡类型' => 'require|chsAlpha|max:32',
-                'caraddresstype|USDT地址类型' => 'require|chsAlphaNum|max:10',
-                'caraddress|结算地址' => 'require|alphaNum|max:50',
-            ],
-            // 可以添加更多结算卡类型的规则
-        ];
-        if (isset($allRules[$bankcardtype])) {
-            $rules = $allRules[$bankcardtype];
-        } else {
-            // 默认规则，可以根据实际情况定义
-            $rules = [
-                'bankcardtype|结算卡类型' => 'require|in:bank,alipay,usdt',
-            ];
-        }
-        $keys = array_map(function($key) {
-            // 使用 explode() 函数分割键名，以 "|" 作为分隔符
-            // 并返回分割后的数组的第一个元素，即 "|" 前面的部分
-            return explode('|', $key)[0];
-        }, array_keys($rules));
-
-// 使用处理后的键名数组作为参数传递给 $this->request->only() 方法，以获取请求中的数据
-        $data = $this->request->only($keys);
-        $result = $this->validate($data, $rules);
-        if (true !== $result) {
-            $this->error($result);
-        }
-
-        if(config('site.ifcheckka') == '1'){
-            $data['status'] = '0';
-        }else{
-            $data['status'] = '1';      //自动通过
-        }
-        $id=$this->request->only('id');
-        $where = [
-            'merchant_id'=>$this->auth->merchant_id,
-            'id'=>$id['id']
-        ];
-
-        unset($data['id']);
-
-        \app\common\model\Bankcard::update($data,$where);
-
-        UserLog::addLog($this->auth->merchant_id, '修改编号为'.$where['id'].'的结算卡');
-
-        Notify::bankcard();
-
-        $this->success('修改成功');
-
-    }
-    /**
-     * 删除银行卡
+     * 删除结算卡
      */
     public function del()
     {
